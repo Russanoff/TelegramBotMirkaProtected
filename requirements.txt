@@ -3,3 +3,6 @@ python-dotenv
 fastapi
 uvicorn
 yookassa
+sqlalchemy
+aiosqlite
+httpx

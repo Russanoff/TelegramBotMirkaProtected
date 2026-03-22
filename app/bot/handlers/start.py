@@ -8,7 +8,6 @@ from app.bot.inline_menu.main_menu import main_menu
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
-from app.db.models.vpn_clients import Subscription
 from datetime import timedelta, datetime
 
 
@@ -35,6 +34,7 @@ async def start_func(message: Message):
             return
         else:
             if user.ends_at and user.ends_at > now:
+                photo = ".app/bot/img.png"
                 end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
                 await message.answer(f"Главное меню\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n", reply_markup=main_menu)
             elif user.ends_at and user.ends_at < now:
