@@ -13,7 +13,7 @@ from app.db.models.payment import Payment
 pay_call = Router()
 
 TARIFFS = {
-    10: 2,
+    10: 50,
     30: 150,
     45: 200,
     60: 260,
