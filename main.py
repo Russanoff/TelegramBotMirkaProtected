@@ -10,8 +10,12 @@ from app.bot.call_backs.callbacks_vpn_menu import callbacks_vpn as cvm
 from app.bot.call_backs.end_subs_callbacks import end_subs_callbacks as esc
 from app.bot.call_backs.pay_callbacks import pay_call
 from config import BOT_TOKEN
+from dotenv import load_dotenv
+import os
 
-bot = Bot(token=BOT_TOKEN)
+load_dotenv()
+
+bot = Bot(token=os.getenv("BOT_TOKEN"))
 dp = Dispatcher()
 
 
