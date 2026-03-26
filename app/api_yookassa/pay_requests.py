@@ -1,12 +1,12 @@
+from dotenv import load_dotenv
+import os
 import yookassa
-from yookassa import Refund
-from yookassa import Configuration, Payment
+from yookassa import Payment
 import uuid
-from config import SHOP_ID, SECRET_KEY
 
-
-yookassa.Configuration.account_id = SHOP_ID
-yookassa.Configuration.secret_key = SECRET_KEY
+load_dotenv()
+yookassa.Configuration.account_id = os.getenv("SHOP_ID")
+yookassa.Configuration.secret_key = os.getenv("SECRET_KEY")
 
 
 def create_pay(amount, user_id, msg_id, days):
