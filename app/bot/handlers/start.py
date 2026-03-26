@@ -41,4 +41,3 @@ async def start_func(message: Message):
                 await message.answer(f"Главное меню\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
             elif not user.ends_at:
                 await message.answer(f"Главное меню\n\nНет подписки⏳", reply_markup=main_menu)
-

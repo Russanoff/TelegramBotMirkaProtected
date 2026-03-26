@@ -9,6 +9,7 @@ from app.db.database import init_db
 from app.bot.call_backs.callbacks_vpn_menu import callbacks_vpn as cvm
 from app.bot.call_backs.end_subs_callbacks import end_subs_callbacks as esc
 from app.bot.call_backs.pay_callbacks import pay_call
+from app.bot.handlers.user_count_handler import router_admin
 from dotenv import load_dotenv
 import os
 
@@ -20,6 +21,7 @@ dp = Dispatcher()
 
 async def main():
     await init_db()
+    dp.include_router(router_admin)
     dp.include_router(pay_call)
     dp.include_router(esc)
     dp.include_router(cvm)
