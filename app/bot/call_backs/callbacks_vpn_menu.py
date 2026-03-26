@@ -1,4 +1,5 @@
-
+import os
+from dotenv import load_dotenv
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from app.apiux import new_client, servers
@@ -11,7 +12,9 @@ from app.db.models.user import User
 from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.main_menu import main_menu
 
+load_dotenv()
 
+ADMIN = os.getenv("ADMIN_ID")
 callbacks_vpn = Router()
 
 
@@ -23,6 +26,7 @@ callbacks_vpn = Router()
 
 @callbacks_vpn.callback_query(F.data.in_(servers.SERVERS.keys()))
 async def get_link(callback: CallbackQuery):
+    bot = callback.bot
     tg_id = callback.from_user.id
     server_name = callback.data
     country_name = servers.SERVERS[server_name]['name']
@@ -82,6 +86,12 @@ async def get_link(callback: CallbackQuery):
             await callback.message.edit_text(text=F"{text_link}\n\n`{link}`",
                                              reply_markup=main_menu,
                                              parse_mode='Markdown')
+
+            await bot.send_message(chat_id=ADMIN,text=F"Кто-то взял ссылку!\n\n"
+                                                      F"Сервер - {server['name']}\n"
+                                                      F"Username - {callback.from_user.first_name}\n"
+                                                      F"User_id - {callback.from_user.id}")
+
 
 
 
