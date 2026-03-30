@@ -2,3 +2,5 @@
 *.sqlite3
 *.db
 database.db
+__pycache__/
+*.pyc
