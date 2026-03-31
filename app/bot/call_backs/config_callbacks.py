@@ -4,7 +4,7 @@ from app.bot.inline_menu.main_menu import main_menu
 from app.bot.inline_menu.config_menu import config_menu
 from app.bot.texts.config_vpn import instruction
 from datetime import timedelta, datetime
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 
@@ -25,14 +25,16 @@ async def back_to_main_menu(callback: CallbackQuery):
     await callback.answer('Главное меню')
     async with AsyncSessionLocal() as session:
         user_res = await session.execute(select(User).where(User.tg_id == callback.from_user.id))
+        result_count = await session.execute(select(func.count(User.id)))
+        count = result_count.scalar()
         user = user_res.scalar_one_or_none()
         now = datetime.utcnow()
 
         if user.ends_at and user.ends_at > now:
             end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-            await callback.message.edit_text(f"Главное меню\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
+            await callback.message.edit_text(f"🟢Активные сервера: 3\n👥Пользователей: {count}n\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
                                  reply_markup=main_menu)
         elif user.ends_at and user.ends_at < now:
-            await callback.message.edit_text(f"Главное меню\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные сервера: 3\n👥Пользователей: {count}n\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
         elif not user.ends_at:
-            await callback.message.edit_text(f"Главное меню\n\nНет подписки⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные сервера: 3\n👥Пользователей: {count}n\n\nНет подписки⏳", reply_markup=main_menu)

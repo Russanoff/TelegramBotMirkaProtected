@@ -18,12 +18,6 @@ ADMIN = os.getenv("ADMIN_ID")
 callbacks_vpn = Router()
 
 
-#@callbacks_vpn.callback_query(F.data == 'vpn_menu')
-#async def vpn_menus(callback: CallbackQuery):
-#    await callback.answer('Выберите локацию')
-#    await callback.message.edit_text(text="Выберите локацию", reply_markup=vpn_menu)
-
-
 @callbacks_vpn.callback_query(F.data.in_(servers.SERVERS.keys()))
 async def get_link(callback: CallbackQuery):
     bot = callback.bot
