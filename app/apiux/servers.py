@@ -24,6 +24,15 @@ SERVERS = {
             "password": "Miroslava_101113",
             "remark": "Россия",
             "sub_base": "https://130.49.146.87:2096/sub/"
-        }
+        },
+
+    "USA": {
+                "name": "США",
+                "panel_url": "https://usa.mirkaprotected.ru:2343/L0Ha2sAAlL1SegIX4e/",
+                "username": "adminser",
+                "password": "Miroslava_101113",
+                "remark": "США",
+                "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/"
+            }
 }
 
