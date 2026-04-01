@@ -32,9 +32,9 @@ async def back_to_main_menu(callback: CallbackQuery):
 
         if user.ends_at and user.ends_at > now:
             end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-            await callback.message.edit_text(f"🟢Активные локации: 3\n👥Пользователей: {count}n\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
+            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}n\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
                                  reply_markup=main_menu)
         elif user.ends_at and user.ends_at < now:
-            await callback.message.edit_text(f"🟢Активные локации: 3\n👥Пользователей: {count}n\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}n\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
         elif not user.ends_at:
-            await callback.message.edit_text(f"🟢Активные локации: 3\n👥Пользователей: {count}n\n\nНет подписки⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}n\n\nНет подписки⏳", reply_markup=main_menu)
