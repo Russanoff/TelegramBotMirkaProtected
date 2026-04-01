@@ -4,10 +4,10 @@ main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='❗️Инструкция', callback_data='vpn_instruction'),
     InlineKeyboardButton(text="💸Продлить доступ", callback_data="Extend")],
     [InlineKeyboardButton(text="🇵🇱Польша 🔥 (Стабильный)", callback_data="PL")],
-    [InlineKeyboardButton(text="🇺🇸США (YouTube, Meta)", callback_data="USA")],
+    [InlineKeyboardButton(text="🇺🇸США ⚡️ (YouTube, Meta)", callback_data="USA")],
+    [InlineKeyboardButton(text="🇦🇪ОАЭ (Эмираты)", callback_data="OAE")],
     [InlineKeyboardButton(text="🇳🇱Нидерланды", callback_data="NL")],
     [InlineKeyboardButton(text="🇷🇺Россия", callback_data="RU")],
-    [InlineKeyboardButton(text="🇫🇮Финляндия", callback_data="FN")],
     [InlineKeyboardButton(text='Telegram', callback_data='proxy_tg')],
     [InlineKeyboardButton(text='🖥Профиль', callback_data='profile'),
     InlineKeyboardButton(text='⚙️Поддержка', callback_data='support')]
