@@ -9,7 +9,8 @@ from app.db.database import init_db
 from app.bot.call_backs.callbacks_vpn_menu import callbacks_vpn as cvm
 from app.bot.call_backs.end_subs_callbacks import end_subs_callbacks as esc
 from app.bot.call_backs.pay_callbacks import pay_call
-from app.bot.handlers.user_count_handler import router_admin
+from app.bot.admin.user_count_handler import router_admin
+from app.bot.admin.reminder import checker_bot
 from dotenv import load_dotenv
 import os
 
@@ -29,6 +30,7 @@ async def main():
     dp.include_router(smc)
     dp.include_router(mmr)
     dp.include_router(ccr)
+    asyncio.create_task(checker_bot(bot))
     await dp.start_polling(bot)
 
 
@@ -37,4 +39,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Stop')
+        print("Stop")
