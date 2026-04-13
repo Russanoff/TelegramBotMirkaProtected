@@ -17,7 +17,7 @@ main_menu_router = Router()
 
 
 @main_menu_router.callback_query(F.data == 'proxy_anty')
-async  def proxy_anty(call: CallbackQuery):
+async def proxy_anty(call: CallbackQuery):
     await call.answer(text="Пожалуйста, ожидайте...")
     tg_id = call.from_user.id
     now = datetime.utcnow()
@@ -26,7 +26,7 @@ async  def proxy_anty(call: CallbackQuery):
         user = result_user.scalar_one_or_none()
 
     if user and user.ends_at > now:
-        await call.message.edit_text(text=f'🥇Чат Proxy для браузера  - полная инструкция\n\nhttps://t.me/c/3555347076/39',
+        await call.message.edit_text(text=f'🥇Чат Proxy для браузера  - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
                                      parse_mode='Markdown', reply_markup=main_menu)
     else:
         pass
