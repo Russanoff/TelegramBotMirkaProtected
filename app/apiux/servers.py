@@ -42,6 +42,15 @@ SERVERS = {
                     "password": "Miroslava_101113",
                     "remark": "ОАЭ",
                     "sub_base": "https://france.mirkaprotected.ru:2096/suBscRibers/"
-            }
+            },
+
+    "wlist": {
+                        "name": "БелыеСписки",
+                        "panel_url": "https://antbl.mirkaprotected.ru:24020/IQg9HRJn9556hmjiXX/",
+                        "username": "adminser",
+                        "password": "Miroslava_101113",
+                        "remark": "БелыеСписки",
+                        "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/"
+                }
 }
 

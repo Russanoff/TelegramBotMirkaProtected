@@ -77,3 +77,9 @@ async def proxy_tg(call: CallbackQuery):
             parse_mode='Markdown', reply_markup=main_menu)
     else:
         pass
+
+
+@main_menu_router.callback_query(F.data == "support")
+async def support_answer(callback: CallbackQuery):
+    await callback.answer()
+    await callback.message.edit_text(text="Если остались вопросы, возникли проблемы с подключением или обнаружили ошибку\n\nНапишите администратору - @rsfromen", reply_markup=main_menu)

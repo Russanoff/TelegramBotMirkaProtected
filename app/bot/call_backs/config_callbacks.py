@@ -15,7 +15,7 @@ config_callbacks = Router()
 @config_callbacks.callback_query(F.data == 'vpn_instruction')
 async def have_app_next(callback: CallbackQuery):
     await callback.answer('')
-    await callback.message.edit_text(text=f'{instruction}\n\n🥇Чат ПроВПН - полная инструкция\n\nhttps://t.me/c/3555347076/38',
+    await callback.message.edit_text(text=f'{instruction}\n\n🥇Чат ПроВПН - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
                                      parse_mode='Markdown',
                                      reply_markup=main_menu)
 
