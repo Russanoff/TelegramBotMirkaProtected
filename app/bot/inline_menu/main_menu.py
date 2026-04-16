@@ -8,7 +8,7 @@ main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🇦🇪ОАЭ (Эмираты)", callback_data="OAE")],
     [InlineKeyboardButton(text="🇳🇱Нидерланды", callback_data="NL")],
     [InlineKeyboardButton(text="🇷🇺Россия", callback_data="RU")],
-    [InlineKeyboardButton(text="Если ничего не работает", callback_data="wlist")],
+    [InlineKeyboardButton(text="❗️Ничего не работает(Белые списки)🚫", callback_data="wlist")],
     [InlineKeyboardButton(text='Telegram', callback_data='proxy_tg')],
     [InlineKeyboardButton(text='🖥Профиль', callback_data='profile'),
     InlineKeyboardButton(text='⚙️Поддержка', callback_data='support')]
