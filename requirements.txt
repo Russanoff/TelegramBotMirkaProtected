@@ -1,0 +1,9 @@
+aiogram==3.*
+python-dotenv
+fastapi
+uvicorn
+yookassa
+sqlalchemy
+aiosqlite
+httpx
+aiosend==3.0.5
