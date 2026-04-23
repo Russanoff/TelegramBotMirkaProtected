@@ -13,17 +13,11 @@ async def extend_access(callback: CallbackQuery):
 
 @end_subs_callbacks.callback_query(F.data == "card_pay")
 async def card_variant(callback: CallbackQuery):
-<<<<<<< HEAD
     await callback.answer('Оплата картой')
-=======
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
     await callback.message.edit_text(text="Выберите срок продления доступа:", reply_markup=step_two)
 
 
 @end_subs_callbacks.callback_query(F.data == "usdt_pay")
 async def extend_access(callback: CallbackQuery):
-<<<<<<< HEAD
     await callback.answer('Оплата CryptoPay')
-=======
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
     await callback.message.edit_text(text="Выберите срок продления доступа:", reply_markup=step_two_crypto)

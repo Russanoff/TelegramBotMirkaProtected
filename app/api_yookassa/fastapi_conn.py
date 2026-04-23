@@ -55,7 +55,6 @@ async def check_payment(request: Request):
                 payment.status = 'succeeded'
 
                 subs_res = await session.execute(select(Subscription).where(Subscription.user_id == user_id))
-                subs_for_id = subs_res.scalars()
                 subs = subs_res.scalars().all()
 
                 for sub in subs:
@@ -76,7 +75,7 @@ async def check_payment(request: Request):
             await bot.send_message(chat_id=user_id, text="Оплата не прошла! Попробуйте позже", reply_markup=main_menu)
 
     except Exception as e:
-        print("WEBHOOK ERROR:", e)
+        print("WEBHOOK ERROR:", repr(e))
         await bot.send_message(chat_id=user_id,
                                text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                reply_markup=main_menu)

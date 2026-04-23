@@ -1,19 +1,12 @@
-<<<<<<< HEAD
-import asyncio
 
-=======
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
+import asyncio
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from app.api_yookassa.pay_requests import create_pay
-<<<<<<< HEAD
 from app.api_crypto.crypto import create_invoice, monitor_payment
 import uuid
-=======
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
-
 from datetime import datetime
 
 from sqlalchemy import select
@@ -30,16 +23,12 @@ TARIFFS = {
     90: 350
 }
 
-<<<<<<< HEAD
 CRYPTO_DAYS = {
     10: 1,
     30: 3,
     60: 6,
     90: 8
 }
-
-=======
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
 
 @pay_call.callback_query(F.data.endswith('_access'))
 async def access_days(callback: CallbackQuery):
@@ -77,10 +66,8 @@ async def access_days(callback: CallbackQuery):
         reply_markup=builder.as_markup()
     )
     await callback.answer('Помним о замедлении TG и ожидаем...')
-<<<<<<< HEAD
-    
-    
-    
+
+
 @pay_call.callback_query(F.data.endswith('_accesscry'))
 async def accesscry_day(callback: CallbackQuery):
     await callback.answer('Помним о замедлении TG и ожидаем...')
@@ -121,6 +108,3 @@ async def accesscry_day(callback: CallbackQuery):
     )
 
     await callback.answer()
-=======
-
->>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364

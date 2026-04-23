@@ -3,8 +3,8 @@ import os
 from dotenv import load_dotenv
 from aiosend import TESTNET, CryptoPay
 
-TOKEN=os.getenv('CRYPTO_TOKEN_TEST')
-cp = CryptoPay(TOKEN, TESTNET)
+TOKEN=os.getenv('CRYPTO_TOKEN')
+cp = CryptoPay(TOKEN)
 
 
 async def create_invoice(amount: int, user_id: int):
