@@ -78,7 +78,7 @@ async def check_payment(request: Request):
     except Exception as e:
         print("WEBHOOK ERROR:", e)
         await bot.send_message(chat_id=user_id,
-                               text="Оплата не прошла! Технические проблемы. Повторите попытку оплаты через несколько минут.",
+                               text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                reply_markup=main_menu)
 
     return {"ok": True}
@@ -88,4 +88,5 @@ async def check_payment(request: Request):
 @app.post('/crypto_bot/check_pay')
 async def check_payment_crypto(request: Request):
     body = await request.body()
+    print(body)
     

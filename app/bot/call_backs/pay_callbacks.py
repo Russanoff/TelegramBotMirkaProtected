@@ -1,9 +1,11 @@
+import asyncio
+
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from app.api_yookassa.pay_requests import create_pay
-from app.api_crypto.crypto import create_test_invoice
+from app.api_crypto.crypto import create_invoice, monitor_payment
 import uuid
 
 from datetime import datetime
@@ -69,14 +71,14 @@ async def access_days(callback: CallbackQuery):
     
     
     
-
 @pay_call.callback_query(F.data.endswith('_accesscry'))
 async def accesscry_day(callback: CallbackQuery):
+    await callback.answer('Помним о замедлении TG и ожидаем...')
     days = int(callback.data.split('_')[0])
     user_id = callback.from_user.id
     payment_id = str(uuid.uuid4())
     amount = CRYPTO_DAYS.get(days)
-    url = await create_test_invoice(amount=amount)
+    url = await create_invoice(amount=amount, user_id=user_id)
     now = datetime.utcnow()
     
     async with AsyncSessionLocal() as session:
@@ -100,4 +102,12 @@ async def accesscry_day(callback: CallbackQuery):
     builder.add(InlineKeyboardButton(text="⬅ Назад", callback_data="Extend"))
     
     await callback.message.edit_text(f"Оплата доступа на {days} дней\n\nК оплате - {amount} USD", reply_markup=builder.as_markup())
-    await callback.answer('Помним о замедлении TG и ожидаем...')
+    
+    asyncio.create_task(
+        monitor_payment(
+            user_id=user_id,
+            invoice_id=url.invoice_id
+        )
+    )
+
+    await callback.answer()
