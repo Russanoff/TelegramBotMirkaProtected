@@ -78,6 +78,7 @@ async def check_payment(request: Request):
     except Exception as e:
         print("WEBHOOK ERROR:", e)
         await bot.send_message(chat_id=user_id,
+<<<<<<< HEAD
                                text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                reply_markup=main_menu)
 
@@ -92,3 +93,9 @@ async def check_payment_crypto(request: Request):
     print(body)
     return {"ok": True}
     
+=======
+                               text="Оплата не прошла! Технические проблемы. Повторите попытку оплаты через несколько минут.",
+                               reply_markup=main_menu)
+
+    return {"ok": True}
+>>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364

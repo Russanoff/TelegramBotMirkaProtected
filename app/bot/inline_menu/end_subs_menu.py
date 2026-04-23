@@ -2,7 +2,11 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 step_one = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="КартаМИР/VISA/СБП🇷🇺🇰🇿🇦🇲🇧🇾🇦🇿", callback_data="card_pay")],
+<<<<<<< HEAD
     [InlineKeyboardButton(text="CryptoBot💵(USDT)", callback_data="usdt_pay")],
+=======
+    [InlineKeyboardButton(text="USDT", callback_data="usdt_pay")],
+>>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
     [InlineKeyboardButton(text="↩️Назад", callback_data="back_main_menu")]
 ])
 
@@ -16,10 +20,17 @@ step_two = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 step_two_crypto = InlineKeyboardMarkup(inline_keyboard=[
+<<<<<<< HEAD
     [InlineKeyboardButton(text="10 дней(1 USDT)", callback_data="10_accesscry")],
     [InlineKeyboardButton(text="30 дней(3 USDT)", callback_data="30_accesscry")],
     [InlineKeyboardButton(text="60 дней(6 USDT)", callback_data="60_accesscry")],
     [InlineKeyboardButton(text="90 дней(8 USDT)", callback_data="90_accesscry")],
     [InlineKeyboardButton(text="↩️Выйти", callback_data="back_main_menu")]
+=======
+    [InlineKeyboardButton(text="10 дней(1 USDT)", callback_data="1_access_crypto")],
+    [InlineKeyboardButton(text="30 дней(4 USDT)", callback_data="4_access_crypto")],
+    [InlineKeyboardButton(text="60 дней(5 USDT)", callback_data="5_access_crypto")],
+    [InlineKeyboardButton(text="↩️Выйти", callback_data="back_main_menu_crypto")]
+>>>>>>> 62d265c4750a7abcd0d8926a140034bda1470364
 ])
 
