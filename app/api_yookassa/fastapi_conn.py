@@ -1,4 +1,6 @@
 import json
+import os
+from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi import Request
@@ -79,6 +81,7 @@ async def check_payment(request: Request):
         await bot.send_message(chat_id=user_id,
                                text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                reply_markup=main_menu)
+        await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Ошибка при обработке платежа: {repr(e)}")
 
     return {"ok": True}
 
