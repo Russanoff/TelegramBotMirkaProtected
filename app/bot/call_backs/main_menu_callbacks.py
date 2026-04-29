@@ -57,14 +57,16 @@ async def profile(callback: CallbackQuery):
         day_count = (user.ends_at - now).days
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
         await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
-                                     f'Статус: ✅🚀 Активна до {end_date}\n\n\n'
+                                     f'Статус: ✅🚀\n'
+                                     f'Активна до {end_date}\n\n\n'
                                      f'Последний платёж: {payment.amount} {payment.currency}\n'
                                      f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n'
                                      f'Осталось: {day_count} дней', reply_markup=main_menu)
     elif user.ends_at and user.ends_at < now:
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
         await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
-                                         f'Статус: 🔴⏳ Подписка истекла! {end_date}\n'
+                                         f'Статус: 🔴⏳\n'
+                                         f'Подписка истекла! {end_date}\n'
                                          f'Последний платёж: {payment.amount} {payment.currency}\n'
                                          f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n', reply_markup=main_menu)
     elif not user.ends_at:
