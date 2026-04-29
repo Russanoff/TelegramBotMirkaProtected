@@ -9,6 +9,7 @@ from datetime import timedelta, datetime
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
+from app.db.models.payment import Payment
 from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.end_subs_menu import step_one
 
@@ -47,16 +48,25 @@ async def profile(callback: CallbackQuery):
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(User).where(User.tg_id == tg_id))
         user = result.scalar_one_or_none()
+        
+        payment_result = await session.execute(select(Payment).where(Payment.user_id == tg_id))
+        payment = payment_result.scalars().first()
         now = datetime.utcnow()
 
     if user.ends_at and user.ends_at > now:
+        day_count = (user.ends_at - now).days
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
         await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
-                                     f'Статус: ✅🚀 Активна до {end_date}\n', reply_markup=main_menu)
+                                     f'Статус: ✅🚀 Активна до {end_date}\n\n\n'
+                                     f'Последний платёж: {payment.amount} {payment.currency}\n'
+                                     f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n'
+                                     f'Осталось: {day_count} дней', reply_markup=main_menu)
     elif user.ends_at and user.ends_at < now:
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
         await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
-                                         f'Статус: 🔴⏳ Подписка истекла! {end_date}\n', reply_markup=main_menu)
+                                         f'Статус: 🔴⏳ Подписка истекла! {end_date}\n'
+                                         f'Последний платёж: {payment.amount} {payment.currency}\n'
+                                         f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n', reply_markup=main_menu)
     elif not user.ends_at:
         await callback.message.edit_text(f'Профиль 🖥{name}\nID: {tg_id}\n\n'
                                          f'Статус: ⏳ Нет подписки', reply_markup=main_menu)
