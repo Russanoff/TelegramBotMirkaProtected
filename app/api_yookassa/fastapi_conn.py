@@ -72,6 +72,7 @@ async def check_payment(request: Request):
                     await bot.delete_message(chat_id=user_id, message_id=msg_id)
                 await bot.send_message(chat_id=user_id, text=f"Оплата прошла успешно! Доступ продлён на {days} дней",
                                        reply_markup=main_menu)
+                await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Пользователь {user_id} оплатил доступ на {days} дней")
 
         else:
             await bot.send_message(chat_id=user_id, text="Оплата не прошла! Попробуйте позже", reply_markup=main_menu)

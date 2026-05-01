@@ -93,6 +93,7 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
                         
                     await bot.send_message(chat_id=user_id, text=f"Оплата прошла успешно! Доступ продлён на {days} дней",
                                         reply_markup=main_menu)
+                    await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Пользователь {user_id} оплатил доступ на {days} дней")
                 
 
             elif result and result["status"] == "expired":
