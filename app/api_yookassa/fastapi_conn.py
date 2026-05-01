@@ -87,8 +87,3 @@ async def check_payment(request: Request):
 
 
 
-@app.post('/crypto_bot/check_pay')
-async def check_payment_crypto(request: Request):
-    body = await request.body()
-    print(body)
-    return {"ok": True}

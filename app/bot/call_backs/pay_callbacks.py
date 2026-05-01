@@ -73,13 +73,16 @@ async def accesscry_day(callback: CallbackQuery):
     await callback.answer('Помним о замедлении TG и ожидаем...')
     days = int(callback.data.split('_')[0])
     user_id = callback.from_user.id
-    payment_id = str(uuid.uuid4())
     amount = CRYPTO_DAYS.get(days)
     url = await create_invoice(amount=amount, user_id=user_id)
+    msg_id = callback.message.message_id
+    pay_url = url["pay_url"]
+    invoice_id = url["invoice_id"]
     now = datetime.utcnow()
     
     async with AsyncSessionLocal() as session:
         result_payment = await session.execute(select(Payment).where(Payment.user_id == None))
+        
         pay_data = Payment(
             user_id=user_id,
             amount=amount,
@@ -87,7 +90,7 @@ async def accesscry_day(callback: CallbackQuery):
             currency='USD',
             provider='CryptoPay',
             status='pending',
-            payment_id=payment_id,
+            payment_id=invoice_id,
             create_payment=now
         )
 
@@ -95,16 +98,18 @@ async def accesscry_day(callback: CallbackQuery):
         await session.commit()
     
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text='💳 Оплатить', url=url))
+    builder.add(InlineKeyboardButton(text='💳 Оплатить', url=pay_url))
     builder.add(InlineKeyboardButton(text="⬅ Назад", callback_data="Extend"))
     
     await callback.message.edit_text(f"Оплата доступа на {days} дней\n\nК оплате - {amount} USD", reply_markup=builder.as_markup())
-    
-    asyncio.create_task(
-        monitor_payment(
-            user_id=user_id,
-            invoice_id=url.invoice_id
-        )
-    )
 
-    await callback.answer()
+    
+    await monitor_payment(
+        user_id=user_id,
+        invoice_id=invoice_id,
+        days=days,
+        msg_id=msg_id,
+        bot=callback.bot
+    )
+    
+    return
