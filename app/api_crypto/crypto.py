@@ -12,8 +12,8 @@ from app.bot.inline_menu.main_menu import main_menu
 from app.apiux.servers import SERVERS
 from app.apiux.new_client import XUI
 
-TOKEN=os.getenv('CRYPTO_TOKEN_TEST')
-cp = CryptoPay(TOKEN, TESTNET)
+TOKEN=os.getenv('CRYPTO_TOKEN')
+cp = CryptoPay(TOKEN)
 
 
 async def create_invoice(amount: int, user_id: int):
