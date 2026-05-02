@@ -6,7 +6,7 @@ from app.bot.inline_menu.main_menu import main_menu
 
 from datetime import timedelta, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.payment import Payment
@@ -49,8 +49,10 @@ async def profile(callback: CallbackQuery):
         result = await session.execute(select(User).where(User.tg_id == tg_id))
         user = result.scalar_one_or_none()
         
-        payment_result = await session.execute(select(Payment).where(Payment.user_id == tg_id))
-        payment = payment_result.scalars().first()
+        payment_result = await session.execute(select(Payment)
+                                               .where(Payment.user_id == tg_id, Payment.status == 'succeeded')
+                                               .order_by(Payment.create_payment.desc()).limit(1))
+        payment = payment_result.scalar()
         now = datetime.utcnow()
 
     if user.ends_at and user.ends_at > now:

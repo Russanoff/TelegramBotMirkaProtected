@@ -89,10 +89,14 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
                     await session.commit()
 
                     if msg_id:
-                        await bot.delete_message(chat_id=user_id, message_id=msg_id)
-                        
+                        try:
+                            await bot.delete_message(chat_id=user_id, message_id=msg_id)
+                        except:
+                            pass
+
                     await bot.send_message(chat_id=user_id, text=f"Оплата прошла успешно! Доступ продлён на {days} дней",
                                         reply_markup=main_menu)
+                    
                     await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Пользователь {user_id} оплатил доступ на {days} дней")
                 
 
