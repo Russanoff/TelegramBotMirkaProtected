@@ -29,7 +29,7 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "Россия",
         "sub_base": "https://130.49.146.87:2096/sub/"
-        },
+    },
 
     "USA": {
         "name": "США",
@@ -38,7 +38,7 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "США",
         "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/"
-            },
+    },
 
     "OAE": {
         "name": "ОАЭ",
@@ -47,7 +47,7 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "ОАЭ",
         "sub_base": "https://france.mirkaprotected.ru:2096/suBscRibers/"
-            },
+    },
 
     "wlist": {
         "name": "БелыеСписки",
@@ -56,6 +56,6 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "БелыеСписки",
         "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/"
-                }
+    }
 }
 
