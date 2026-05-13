@@ -31,23 +31,23 @@ SERVERS = {
         "sub_base": "https://130.49.146.87:2096/sub/"
     },
 
-    "USA": {
-        "name": "США",
-        "panel_url": "https://usa.mirkaprotected.ru:2343/L0Ha2sAAlL1SegIX4e/",
-        "username": os.getenv('ADMIN'),
-        "password": os.getenv('PASSWORD'),
-        "remark": "США",
-        "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/"
-    },
+    # "USA": {
+    #     "name": "США",
+    #     "panel_url": "https://usa.mirkaprotected.ru:2343/L0Ha2sAAlL1SegIX4e/",
+    #     "username": os.getenv('ADMIN'),
+    #     "password": os.getenv('PASSWORD'),
+    #     "remark": "США",
+    #     "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/"
+    # },
 
-    "OAE": {
-        "name": "ОАЭ",
-        "panel_url": "https://france.mirkaprotected.ru:3354/KO2KCUI6V1HdkLGpGP/",
-        "username": os.getenv('ADMIN'),
-        "password": os.getenv('PASSWORD'),
-        "remark": "ОАЭ",
-        "sub_base": "https://france.mirkaprotected.ru:2096/suBscRibers/"
-    },
+    # "OAE": {
+    #     "name": "ОАЭ",
+    #     "panel_url": "https://france.mirkaprotected.ru:3354/KO2KCUI6V1HdkLGpGP/",
+    #     "username": os.getenv('ADMIN'),
+    #     "password": os.getenv('PASSWORD'),
+    #     "remark": "ОАЭ",
+    #     "sub_base": "https://france.mirkaprotected.ru:2096/suBscRibers/"
+    # },
 
     "wlist": {
         "name": "БелыеСписки",
@@ -58,4 +58,3 @@ SERVERS = {
         "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/"
     }
 }
-
