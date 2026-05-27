@@ -9,7 +9,7 @@ SERVERS = {
         "panel_url": "https://panel.mirkaprotected.ru:8443/Tg8fvceLgQdcFALcQ1/",
         "username": os.getenv('ADMIN'),
         "password": os.getenv('PASSWORD'),
-        "remark": "Нидерланды",
+        "remark": "Nederlanden",
         "sub_base": "https://panel.mirkaprotected.ru:2096/sub/"
     },
 
@@ -18,7 +18,7 @@ SERVERS = {
         "panel_url": "https://89.125.159.161:40184/G7EEoRhzE2XqDTs6Ub/",
         "username": os.getenv('ADMIN'),
         "password": os.getenv('PASSWORD'),
-        "remark": "Польша",
+        "remark": "Poland",
         "sub_base": "https://89.125.159.161:2096/sub/"
     },
 
