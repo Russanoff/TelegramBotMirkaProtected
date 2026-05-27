@@ -18,9 +18,11 @@ from app.db.models.user import User
 from app.db.models.payment import Payment
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
+from app.api_main.subs_endpoint import subs_router
 
 app = FastAPI()
 
+app.include_router(subs_router)
 
 @app.post('/yookassa/check_pay')
 async def check_payment(request: Request):

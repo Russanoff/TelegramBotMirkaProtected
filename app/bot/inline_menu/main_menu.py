@@ -3,10 +3,11 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='❗️Инструкция', callback_data='vpn_instruction'),
     InlineKeyboardButton(text="💸Продлить доступ", callback_data="Extend")],
+    # [InlineKeyboardButton(text="Все сервера", callback_data="subs")],
     [InlineKeyboardButton(text="❗️Для россиян(Белые списки🇺🇸)🚫❗️", callback_data="wlist")],
     [InlineKeyboardButton(text="🇵🇱Польша 🔥 (Стабильный)", callback_data="PL")],
     # [InlineKeyboardButton(text="🇺🇸США ⚡️ (YouTube, Meta)", callback_data="USA")],
-    # [InlineKeyboardButton(text="🇦🇪ОАЭ (Эмираты)", callback_data="OAE")],
+    # [InlineKeyboardButton(text="🇫🇷Франция", callback_data="FR")],
     [InlineKeyboardButton(text="🇳🇱Нидерланды", callback_data="NL")],
     # [InlineKeyboardButton(text="🇷🇺Россия (Волоколамск)", callback_data="RU")],
     [InlineKeyboardButton(text='Telegram MTProto', callback_data='proxy_tg')],

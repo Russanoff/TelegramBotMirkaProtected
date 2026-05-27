@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import BigInteger, Boolean, DateTime
+from sqlalchemy import BigInteger, Boolean, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -15,3 +15,4 @@ class User(Base):
     ends_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
     create_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow())
+    token: Mapped[str] = mapped_column(String(260), default=False)
