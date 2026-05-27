@@ -98,7 +98,7 @@ class XUI:
         result = await self.add_client(
             inbound_id=inbound_id,
             client_name=client_name,
-            flow="xtls-rprx-vision",
+            flow="",
             tg_id=tg_id,
             ends_at=ends_at
         )

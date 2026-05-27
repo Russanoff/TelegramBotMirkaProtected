@@ -1,5 +1,6 @@
 import datetime
 import json
+import asyncio
 
 from fastapi import APIRouter, HTTPException, Request
 from app.apiux import servers
@@ -46,6 +47,7 @@ async def get_subscription(token: str):
                     client_name=f'TG_{user.tg_id}',
                     tg_id=user.tg_id, ends_at=user.ends_at)
 
+                sub_id = link.split("/")[-1]
                 vpn = Subscription(user_id=user.tg_id,
                                 server_name=server_name,
                                 sub_id=link.split('/')[-1],
@@ -55,58 +57,58 @@ async def get_subscription(token: str):
                                 is_active=True)
                 session.add(vpn)
                 await session.commit()
+                await asyncio.sleep(1)  # Небольшая задержка для обеспечения сохранения данных в БД
             else:
-                
                 sub_id = sub.sub_id
-                inbounds = await xui.get_inbounds()
+                
+            inbounds = await xui.get_inbounds()
+            for inbound in inbounds["obj"]:
 
-                for inbound in inbounds["obj"]:
+                settings = json.loads(inbound["settings"])
+                stream = json.loads(inbound["streamSettings"])
 
-                    settings = json.loads(inbound["settings"])
-                    stream = json.loads(inbound["streamSettings"])
+                clients = settings.get("clients", [])
 
-                    clients = settings.get("clients", [])
+                for client in clients:
 
-                    for client in clients:
+                    if client["subId"] != sub_id:
+                        continue
 
-                        if client["subId"] != sub_id:
-                            continue
+                    uuid = client["id"]
+                    grpc = stream.get("grpcSettings", {})
+                    reality = stream.get("realitySettings", {})
+                    service_name = grpc.get("serviceName", "")
+                    public_key = reality.get("settings", {}).get("publicKey", "")
+                    fingerprint = reality.get("settings", {}).get("fingerprint", "chrome")
 
-                        uuid = client["id"]
-                        grpc = stream.get("grpcSettings", {})
-                        reality = stream.get("realitySettings", {})
-                        service_name = grpc.get("serviceName", "")
-                        public_key = reality.get("settings", {}).get("publicKey", "")
-                        fingerprint = reality.get("settings", {}).get("fingerprint", "chrome")
+                    sni = (
+                        reality.get("serverNames", [""])[0]
+                        if reality.get("serverNames")
+                        else reality.get("settings", {}).get("serverName", "")
+                    )
 
-                        server_name = (
-                            reality.get("serverNames", [""])[0]
-                            if reality.get("serverNames")
-                            else reality.get("settings", {}).get("serverName", "")
-                        )
+                    short_ids = reality.get("shortIds", [])
+                    short_id = short_ids[0]
+                    host = SERVERS[server_name]["host"]
+                    port = inbound["port"]
+                    remark = SERVERS[server_name]["name"]
 
-                        short_ids = reality.get("shortIds", [])
-                        short_id = short_ids[0]
-                        host = SERVERS[sub.server_name]["host"]
-                        port = inbound["port"]
-                        remark = SERVERS[sub.server_name]["name"]
+                    vless = (
+                        f"vless://{uuid}@{host}:{port}"
+                        f"?type=grpc"
+                        f"&security=reality"
+                        f"&pbk={public_key}"
+                        f"&fp={fingerprint}"
+                        f"&sni={sni}"
+                        f"&sid={short_id}"
+                        f"&serviceName={service_name}"
+                        f"&encryption=none"
+                        f"&authority="
+                        f"&spx=%2F"
+                        f"#{remark}"
+                    )
 
-                        vless = (
-                            f"vless://{uuid}@{host}:{port}"
-                            f"?type=grpc"
-                            f"&security=reality"
-                            f"&pbk={public_key}"
-                            f"&fp={fingerprint}"
-                            f"&sni={server_name}"
-                            f"&sid={short_id}"
-                            f"&serviceName={service_name}"
-                            f"&encryption=none"
-                            f"&authority="
-                            f"&spx=%2F"
-                            f"#{remark}"
-                        )
-
-                        links.append(vless)
+                    links.append(vless)
                         
         
         result = "\n".join(links)
