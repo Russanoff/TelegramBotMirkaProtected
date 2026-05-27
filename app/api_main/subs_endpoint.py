@@ -27,23 +27,37 @@ async def get_subscription(token: str):
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
-        result_subs = await session.execute(select(Subscription).where(Subscription.user_id == user.tg_id))
-        subs = result_subs.scalars().all()
-        now = datetime.datetime.utcnow()
-        links = []  
+        links = []
         
-        if not user.ends_at:
-            user.ends_at = now + datetime.timedelta(days=7)
-            user.trial_used = True
+        for server_name, server in SERVERS.items():
+            result_subs = await session.execute(
+                select(Subscription).where(
+                    Subscription.user_id == user.tg_id,
+                    Subscription.server_name == server_name))
+            sub = result_subs.scalar_one_or_none()
+            now = datetime.datetime.utcnow()
             
+            xui = XUI(server)
+            await xui.login()
+          
+        
+            if not sub:
+                link = await xui.create_link(
+                    client_name=f'TG_{user.tg_id}',
+                    tg_id=user.tg_id, ends_at=user.ends_at)
 
-        if subs:
-            for sub in subs:
-
-                xui = XUI(SERVERS[sub.server_name])
-
-                await xui.login()
-
+                vpn = Subscription(user_id=user.tg_id,
+                                server_name=server_name,
+                                sub_id=link.split('/')[-1],
+                                sub_link=link,
+                                starts_at=now,
+                                is_trial=True,
+                                is_active=True)
+                session.add(vpn)
+                await session.commit()
+            else:
+                
+                sub_id = sub.sub_id
                 inbounds = await xui.get_inbounds()
 
                 for inbound in inbounds["obj"]:
@@ -55,7 +69,7 @@ async def get_subscription(token: str):
 
                     for client in clients:
 
-                        if client["subId"] != sub.sub_id:
+                        if client["subId"] != sub_id:
                             continue
 
                         uuid = client["id"]
@@ -94,26 +108,6 @@ async def get_subscription(token: str):
 
                         links.append(vless)
                         
-                        
-
-    
-        else:
-             for server_name, server in SERVERS.items():
-                 xui = new_client.XUI(server)
-                 await xui.login()
-                 link = await xui.create_link(client_name=f'TG_{user.tg_id}', tg_id=user.tg_id, ends_at=user.ends_at)
-
-                 vpn = Subscription(user_id=user.tg_id,
-                                 server_name=server_name,
-                                 sub_id=link.split('/')[-1],
-                                 sub_link=link,
-                                 starts_at=datetime.utcnow(),
-                                 is_trial=True,
-                                 is_active=True)
-                 session.add(vpn)
-
-                 await session.commit()
-                
         
         result = "\n".join(links)
 
