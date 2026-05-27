@@ -5,23 +5,23 @@ load_dotenv()
 
 SERVERS = {
     "NL": {
-        "name": "🇳🇱Нидерланды",
+        "name": "🇳🇱Nederlanden",
         "panel_url": "https://panel.mirkaprotected.ru:8443/Tg8fvceLgQdcFALcQ1/",
         "username": os.getenv('ADMIN'),
         "password": os.getenv('PASSWORD'),
-        "remark": "Нидерланды",
+        "remark": "Nederlanden",
         "sub_base": "https://panel.mirkaprotected.ru:2096/sub/",
-        # "host": "panel.mirkaprotected.ru"
+        "host": "panel.mirkaprotected.ru"
     },
 
     "PL": {
-        "name": "🇵🇱Польша",
+        "name": "🇵🇱Poland",
         "panel_url": "https://89.125.159.161:40184/G7EEoRhzE2XqDTs6Ub/",
         "username": os.getenv('ADMIN'),
         "password": os.getenv('PASSWORD'),
-        "remark": "Польша",
+        "remark": "Poland",
         "sub_base": "https://89.125.159.161:2096/sub/",
-        # "host": "89.125.159.161"
+        "host": "89.125.159.161"
     },
 
     # "RU": {
@@ -33,25 +33,25 @@ SERVERS = {
     #     "sub_base": "https://130.49.146.87:2096/sub/"
     # },
 
-    # "USA": {
-    #     "name": "США",
-    #     "panel_url": "https://usa.mirkaprotected.ru:2343/L0Ha2sAAlL1SegIX4e/",
-    #     "username": os.getenv('ADMIN'),
-    #     "password": os.getenv('PASSWORD'),
-    #     "remark": "США",
-    #     "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/",
-    #     "host": "usa.mirkaprotected.ru"
-    # },
+    "USA": {
+        "name": "🇺🇸USA",
+        "panel_url": "https://usa.mirkaprotected.ru:4343/HpmzDrFUCuQxvKiFdy",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "USA",
+        "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/",
+        "host": "usa.mirkaprotected.ru"
+    },
 
-    # "FR": {
-    #     "name": "🇫🇷Франция",
-    #     "panel_url": "https://france.mirkaprotected.ru:3454/sXFYWBt0HpR7cpxvlR/",
-    #     "username": os.getenv('ADMIN'),
-    #     "password": os.getenv('PASSWORD'),
-    #     "remark": "Франция",
-    #     "sub_base": "https://france.mirkaprotected.ru:2096/subSccCribBE/",
-    #     "host": "france.mirkaprotected.ru"
-    # },
+    "FR": {
+        "name": "🇫🇷France",
+        "panel_url": "https://france.mirkaprotected.ru:3454/sXFYWBt0HpR7cpxvlR/",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "France",
+        "sub_base": "https://france.mirkaprotected.ru:2096/subSccCribBE/",
+        "host": "france.mirkaprotected.ru"
+    },
 
     "wlist": {
         "name": "🇺🇸БелыеСписки",
@@ -60,6 +60,6 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "БелыеСписки",
         "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/",
-        # "host": "antbl.mirkaprotected.ru"
+        "host": "antbl.mirkaprotected.ru"
     }
 }
