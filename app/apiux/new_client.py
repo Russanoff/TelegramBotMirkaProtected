@@ -126,7 +126,7 @@ class XUI:
                                     "id": client_id,
                                     "expiryTime": expiry_time,
                                     "enable": True,
-                                    "flow": 'xtls-rprx-vision',
+                                    #"flow": 'xtls-rprx-vision',
                                     "email": client_name,
                                     "subId": subs_id,
                                     "comment": 'Повторный доступ'

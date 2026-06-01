@@ -4,6 +4,16 @@ import os
 load_dotenv()
 
 SERVERS = {
+    "GE": {
+        "name": "🇩🇪Germany",
+        "panel_url": "https://germany.mirkaprotected.ru:4525/8yVOxHuJrdItrjVKHG/",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "Germany",
+        "sub_base": "https://germany.mirkaprotected.ru:4525/subBbSc/",
+        "host": "germany.mirkaprotected.ru"
+    },
+    
     "NL": {
         "name": "🇳🇱Nederlanden",
         "panel_url": "https://panel.mirkaprotected.ru:8443/Tg8fvceLgQdcFALcQ1/",
@@ -53,13 +63,13 @@ SERVERS = {
         "host": "france.mirkaprotected.ru"
     },
 
-    "wlist": {
-        "name": "🇺🇸БелыеСписки",
-        "panel_url": "https://antbl.mirkaprotected.ru:24020/IQg9HRJn9556hmjiXX/",
-        "username": os.getenv('ADMIN'),
-        "password": os.getenv('PASSWORD'),
-        "remark": "БелыеСписки",
-        "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/",
-        "host": "antbl.mirkaprotected.ru"
-    }
+    # "wlist": {
+    #     "name": "🇺🇸БелыеСписки",
+    #     "panel_url": "https://antbl.mirkaprotected.ru:24020/IQg9HRJn9556hmjiXX/",
+    #     "username": os.getenv('ADMIN'),
+    #     "password": os.getenv('PASSWORD'),
+    #     "remark": "БелыеСписки",
+    #     "sub_base": "https://antbl.mirkaprotected.ru:2096/subbssRibss/",
+    #     "host": "antbl.mirkaprotected.ru"
+    # }
 }
