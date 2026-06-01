@@ -47,7 +47,7 @@ class XUI:
 
         expiry_time = int(ends_at.timestamp() * 1000)
         sub_id = secrets.token_urlsafe(9)
-        flow = "xtls-rprx-vision"
+        flow = ""
         client_uuid = str(uuid.uuid4())
 
         payload = {
