@@ -14,6 +14,16 @@ SERVERS = {
         "host": "germany.mirkaprotected.ru"
     },
     
+    "LT": {
+        "name": " 🇱🇻Latvija",
+        "panel_url": "https://ltv.mirkaprotected.ru:4545/vcQi219B8pAO8MeLE4/",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "Latvija",
+        "sub_base": "https://ltv.mirkaprotected.ru:4545/subScSr/",
+        "host": "ltv.mirkaprotected.ru"
+    },
+    
     "NL": {
         "name": "🇳🇱Nederlanden",
         "panel_url": "https://panel.mirkaprotected.ru:8443/Tg8fvceLgQdcFALcQ1/",
