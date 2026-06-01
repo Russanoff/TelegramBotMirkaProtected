@@ -24,9 +24,14 @@ async def get_subscription(token: str):
     async with AsyncSessionLocal() as session:
         result_user = await session.execute(select(User).where(User.token == token))
         user = result_user.scalar_one_or_none()
+        now = datetime.datetime.utcnow()
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+        
+        if not user.ends_at:
+            user.ends_at = now + datetime.timedelta(days=7)
+            user.trial_used = True
         
         links = []
         
@@ -36,7 +41,7 @@ async def get_subscription(token: str):
                     Subscription.user_id == user.tg_id,
                     Subscription.server_name == server_name))
             sub = result_subs.scalar_one_or_none()
-            now = datetime.datetime.utcnow()
+            
             
             xui = XUI(server)
             await xui.login()
