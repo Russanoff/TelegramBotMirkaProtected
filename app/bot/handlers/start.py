@@ -1,3 +1,5 @@
+import secrets
+
 from aiogram import Router
 from aiogram.types import Message, InputMediaPhoto
 from aiogram.filters import CommandStart
@@ -26,8 +28,9 @@ async def start_func(message: Message):
         now = datetime.utcnow()
 
         if user is None:
+            token = secrets.token_urlsafe(16)
             user = User(tg_id=tg_id)
-            session.add(user)
+            session.add(User(tg_id=tg_id, token=token))
             await session.commit()
 
         if not user.accepted_terms:

@@ -97,3 +97,20 @@ async def proxy_tg(call: CallbackQuery):
 async def support_answer(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(text="Если остались вопросы, возникли проблемы с подключением или обнаружили ошибку\n\nНапишите администратору - @rsfromen", reply_markup=main_menu)
+    
+
+@main_menu_router.callback_query(F.data == "subs")
+async def subs_func(callback: CallbackQuery):
+    await callback.answer(text="Пожалуйста, ожидайте...")
+    tg_id = callback.from_user.id
+
+    async with AsyncSessionLocal() as session:
+        result_user = await session.execute(select(User).where(User.tg_id == tg_id))
+        user = result_user.scalar_one_or_none()
+        link = f"https://subs.mirkaprotected.ru/subs/{user.token}"
+        await callback.message.edit_text(
+            text=f"Скопируйте ссылку и добавте в приложении Happ или Hiddify\n\n`{link}`",
+            parse_mode='Markdown', reply_markup=main_menu)
+        
+        
+    
