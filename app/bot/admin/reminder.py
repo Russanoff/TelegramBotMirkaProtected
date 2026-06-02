@@ -25,7 +25,12 @@ async def send_reminder(bot, session):
 
     try:
         for user in users:
-            await bot.send_message(chat_id=user.tg_id, text="⚠️Подписка заканчивается!", reply_markup=main_menu)
+            await bot.send_message(chat_id=user.tg_id, 
+                                   text="⚠️Завтра истекает подписка!\n\n"
+                                   "Если нет доступа к TG добавте эти временные прокси\n\n"
+                                   "Сервер - `ltv.mirkaprotected.ru`\n"
+                                   "Порт - `8080`\nЛогин - `john`\nПароль - `carter`",
+                                   parse_mode='Markdown', reply_markup=main_menu)
     except Exception as e:
         print(f"Ошибка: {e}")
 
