@@ -68,6 +68,8 @@ async def get_subscription(token: str):
                 
             inbounds = await xui.get_inbounds()
             for inbound in inbounds["obj"]:
+                
+                print("STREAM =", repr(inbound.get("streamSettings")))
 
                 settings = json.loads(inbound["settings"])
                 stream = json.loads(inbound["streamSettings"])
