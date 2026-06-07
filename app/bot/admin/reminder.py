@@ -29,7 +29,9 @@ async def send_reminder(bot, session):
                                    text="⚠️Завтра истекает подписка!\n\n"
                                    "Если нет доступа к TG добавте эти временные прокси\n\n"
                                    "Сервер - `ltv.mirkaprotected.ru`\n"
-                                   "Порт - `8080`\nЛогин - `john`\nПароль - `carter`",
+                                   "Порт - `8080`\nЛогин - `john`\nПароль - `carter`\n\n"
+                                   "Сервер - `usa.mirkaprotected.ru`\n"
+                                   "Порт - `8010`\nЛогин - `piter`\nПароль - `parker`",
                                    parse_mode='Markdown', reply_markup=main_menu)
     except Exception as e:
         print(f"Ошибка: {e}")
