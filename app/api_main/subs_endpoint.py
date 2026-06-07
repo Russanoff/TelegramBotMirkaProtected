@@ -69,11 +69,12 @@ async def get_subscription(token: str):
             inbounds = await xui.get_inbounds()
             for inbound in inbounds["obj"]:
                 
-                if inbound.get("protocol") != "vless":
+                if inbound["protocol"] != "vless":
                     continue
+                
 
                 settings = json.loads(inbound["settings"])
-                stream = json.loads()
+                stream = json.loads(inbound["streamSettings"])
 
                 clients = settings.get("clients", [])
 
@@ -122,7 +123,7 @@ async def get_subscription(token: str):
         result = "\n".join(links)
 
         encoded = base64.b64encode(result.encode()).decode()
-        
+
         return PlainTextResponse(encoded)
 
                 
