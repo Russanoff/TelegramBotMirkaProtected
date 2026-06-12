@@ -29,3 +29,6 @@ async def user_count(msg: Message):
     await msg.answer(f"Колличество пользователей: {count}\n"
                      f"Прошли соглашение: {accepted}\n"
                      f"Есть пробный: {trial}\n")
+
+
+
