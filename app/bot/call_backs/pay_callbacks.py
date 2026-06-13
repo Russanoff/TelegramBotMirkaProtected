@@ -16,18 +16,18 @@ from app.db.models.payment import Payment
 pay_call = Router()
 
 TARIFFS = {
-    10: 50,
-    30: 150,
-    45: 200,
-    60: 260,
-    90: 350
+    10: 60,
+    30: 199,
+    60: 360,
+    90: 450,
+    365: 1200
 }
 
 CRYPTO_DAYS = {
     10: 1,
-    30: 3,
-    60: 6,
-    90: 8
+    30: 4,
+    60: 7,
+    90: 9
 }
 
 @pay_call.callback_query(F.data.endswith('_access'))
