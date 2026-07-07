@@ -3,6 +3,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 step_one = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="КартаМИР/VISA/СБП🇷🇺🇰🇿🇦🇲🇧🇾🇦🇿", callback_data="card_pay")],
     [InlineKeyboardButton(text="CryptoBot💵(USDT)", callback_data="usdt_pay")],
+    [InlineKeyboardButton(text="TelegramStars⭐", callback_data="stars_pay")]
     [InlineKeyboardButton(text="↩️Назад", callback_data="back_main_menu")]
 ])
 
