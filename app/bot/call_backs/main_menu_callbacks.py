@@ -6,12 +6,13 @@ from app.bot.inline_menu.main_menu import main_menu
 
 from datetime import timedelta, datetime
 
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.payment import Payment
 from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.end_subs_menu import step_one
+from app.bot.referral import REFERRAL_BONUS_DAYS
 
 
 main_menu_router = Router()
@@ -91,6 +92,32 @@ async def proxy_tg(call: CallbackQuery):
             parse_mode='Markdown', reply_markup=main_menu)
     else:
         pass
+
+
+@main_menu_router.callback_query(F.data == 'referral')
+async def referral_info(callback: CallbackQuery):
+    await callback.answer('Пожалуйста, ожидайте...')
+    tg_id = callback.from_user.id
+    bot_user = await callback.bot.get_me()
+    link = f"https://t.me/{bot_user.username}?start={tg_id}"
+
+    async with AsyncSessionLocal() as session:
+        count_result = await session.execute(
+            select(func.count(User.id)).where(
+                User.referrer_id == tg_id,
+                User.referral_bonus_granted == True,
+            )
+        )
+        count = count_result.scalar()
+
+    await callback.message.edit_text(
+        f"🤝Приглашайте друзей и получайте бонусные дни подписки!\n\n"
+        f"За каждого друга, который оплатит подписку, вам начислится {REFERRAL_BONUS_DAYS} дней доступа.\n\n"
+        f"Ваша реферальная ссылка:\n`{link}`\n\n"
+        f"Приглашено друзей (оплативших): {count}",
+        parse_mode='Markdown',
+        reply_markup=main_menu,
+    )
 
 
 @main_menu_router.callback_query(F.data == "support")

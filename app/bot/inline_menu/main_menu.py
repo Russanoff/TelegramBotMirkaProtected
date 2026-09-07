@@ -13,6 +13,7 @@ main_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Telegram MTProto', callback_data='proxy_tg')],
     [InlineKeyboardButton(text='🖥Профиль', callback_data='profile'),
     InlineKeyboardButton(text='⚙️Поддержка', callback_data='support')],
+    [InlineKeyboardButton(text='🤝Пригласить друга', callback_data='referral')],
     [InlineKeyboardButton(text='Новости', url='https://t.me/+OfaQPnkI6s9hNTMy')],
     #[InlineKeyboardButton(text='Прокси Anty', callback_data='proxy_anty')],
 ])

@@ -2,7 +2,7 @@ import secrets
 
 from aiogram import Router
 from aiogram.types import Message, InputMediaPhoto
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, CommandObject
 from app.bot.inline_menu.start_menu import keyboard_start
 from app.bot.texts.hello import hello_text
 from app.bot.inline_menu.main_menu import main_menu
@@ -17,8 +17,9 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def start_func(message: Message):
+async def start_func(message: Message, command: CommandObject):
     tg_id = message.from_user.id
+    ref_payload = command.args
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(User).where(User.tg_id == tg_id))
@@ -28,9 +29,20 @@ async def start_func(message: Message):
         now = datetime.utcnow()
 
         if user is None:
+            referrer_id = None
+            if ref_payload:
+                try:
+                    candidate_id = int(ref_payload)
+                except ValueError:
+                    candidate_id = None
+                if candidate_id and candidate_id != tg_id:
+                    ref_result = await session.execute(select(User).where(User.tg_id == candidate_id))
+                    if ref_result.scalar_one_or_none():
+                        referrer_id = candidate_id
+
             token = secrets.token_urlsafe(16)
-            user = User(tg_id=tg_id)
-            session.add(User(tg_id=tg_id, token=token))
+            user = User(tg_id=tg_id, token=token, referrer_id=referrer_id)
+            session.add(user)
             await session.commit()
 
         if not user.accepted_terms:

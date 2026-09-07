@@ -11,6 +11,7 @@ from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.main_menu import main_menu
 from app.apiux.servers import SERVERS
 from app.apiux.new_client import XUI
+from app.bot.referral import grant_referral_bonus
 
 TOKEN=os.getenv('CRYPTO_TOKEN')
 cp = CryptoPay(TOKEN)
@@ -86,6 +87,8 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
                         await xui.login()
                         await xui.update_expiry(client_name=f"TG_{user_id}", ends_at=user.ends_at, subs_id=sub_id)
                         await xui.close()
+
+                    await grant_referral_bonus(session, user, bot=bot)
                     await session.commit()
 
                     if msg_id:

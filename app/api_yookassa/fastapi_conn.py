@@ -19,6 +19,7 @@ from app.db.models.payment import Payment
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
 from app.api_main.subs_endpoint import subs_router
+from app.bot.referral import grant_referral_bonus
 
 app = FastAPI()
 
@@ -68,6 +69,8 @@ async def check_payment(request: Request):
                     await xui.login()
                     await xui.update_expiry(client_name=f"TG_{user_id}", ends_at=user.ends_at, subs_id=sub_id)
                     await xui.close()
+
+                await grant_referral_bonus(session, user, bot=bot)
                 await session.commit()
 
                 if msg_id:
