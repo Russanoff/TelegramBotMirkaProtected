@@ -48,16 +48,22 @@ async def check_invoice_status(invoice_id):
     }
 
     
+async def _mark_pending_payment_status(invoice_id: int, status: str) -> None:
+    async with AsyncSessionLocal() as session:
+        result_payment = await session.execute(select(Payment).where(Payment.payment_id == invoice_id))
+        payment = result_payment.scalar_one_or_none()
+        if payment and payment.status == "pending":
+            payment.status = status
+            await session.commit()
+
+
 async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int = None, bot=None):
-    for _ in range(16): 
-        
+    for _ in range(16):
         try:
-            
             result = await check_invoice_status(invoice_id)
-            now = datetime.utcnow()
-        
+
             if result and result["status"] == "paid":
-                
+
                 async with AsyncSessionLocal() as session:
                     result_payment = await session.execute(select(Payment).where(Payment.payment_id == invoice_id))
                     payment = result_payment.scalar_one_or_none()
@@ -83,22 +89,33 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
 
                     await bot.send_message(chat_id=user_id, text=f"Оплата прошла успешно! Доступ продлён на {days} дней",
                                         reply_markup=main_menu)
-                    
+
                     await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Пользователь {user_id} оплатил доступ на {days} дней")
-                
+
+                return {"ok": True}
 
             elif result and result["status"] == "expired":
+                await _mark_pending_payment_status(invoice_id, "expired")
                 await bot.send_message(chat_id=user_id, text="Оплата не прошла! Попробуйте позже", reply_markup=main_menu)
                 return
 
         except Exception as e:
             logger.exception("Ошибка при обработке платежа CryptoPay у %s", user_id)
             await bot.send_message(chat_id=user_id,
-                                text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
+                                text="Проверьте доступ!\n\nЕсли возникли трудности свяжитесь с техподдержкой - @rsfromen.",
                                 reply_markup=main_menu)
             await bot.send_message(chat_id=os.getenv('ADMIN_ID'), text=f"Ошибка при обработке платежа: {repr(e)}")
             return
-            
-    await asyncio.sleep(8)
 
-    logger.info("Invoice expired: %s", invoice_id)
+        # Пауза между опросами статуса счёта — раньше стояла после цикла и не давала
+        # пользователю времени реально оплатить, пока опрос уже заканчивался.
+        await asyncio.sleep(8)
+
+    logger.info("Invoice timed out without a final status: %s", invoice_id)
+    await _mark_pending_payment_status(invoice_id, "expired")
+    if bot:
+        await bot.send_message(
+            chat_id=user_id,
+            text="Не удалось дождаться подтверждения оплаты. Если вы всё же оплатили — напишите в поддержку @rsfromen, разберёмся вручную.",
+            reply_markup=main_menu,
+        )

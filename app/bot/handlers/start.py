@@ -55,6 +55,6 @@ async def start_func(message: Message, command: CommandObject):
                 end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
                 await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n", reply_markup=main_menu)
             elif user.ends_at and user.ends_at < now:
-                await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nn\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+                await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
             elif not user.ends_at:
                 await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\n\n\nНет подписки⏳", reply_markup=main_menu)

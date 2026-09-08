@@ -64,7 +64,7 @@ async def access_days(callback: CallbackQuery):
     builder.add(InlineKeyboardButton(text="⬅ Назад", callback_data="Extend"))
 
     await callback.message.edit_text(
-        f"Оплата доступа на {days} дней\n\nК оплате — {amount} руб\n\nПоcле оплаты в этот чат будет отправлен статус платежа",
+        f"Оплата доступа на {days} дней\n\nК оплате — {amount} руб\n\nПосле оплаты в этот чат будет отправлен статус платежа",
         reply_markup=builder.as_markup()
     )
     await callback.answer('Помним о замедлении TG и ожидаем...')

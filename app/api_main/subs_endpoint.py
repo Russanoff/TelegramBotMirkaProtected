@@ -2,6 +2,7 @@ import datetime
 import json
 import asyncio
 import logging
+import os
 
 from fastapi import APIRouter, HTTPException, Request
 from app.apiux import servers
@@ -130,6 +131,19 @@ async def get_subscription(token: str):
             finally:
                 if xui is not None:
                     await xui.close()
+
+        if not links:
+            # Раньше в этом случае пользователь молча получал пустую подписку
+            # (ни один сервер не поднялся), а админ никогда об этом не узнавал.
+            logger.error("Не удалось выдать ни одной VPN-ссылки пользователю %s", user.tg_id)
+            try:
+                from main import bot
+                await bot.send_message(
+                    chat_id=os.getenv('ADMIN_ID'),
+                    text=f"⚠️Пользователь {user.tg_id} запросил подписку, но ни одна из {len(SERVERS)} панелей не выдала ссылку — проверьте панели вручную.",
+                )
+            except Exception:
+                logger.exception("Не удалось уведомить админа о пустой подписке для %s", user.tg_id)
 
         result = "\n".join(links)
 

@@ -36,6 +36,6 @@ async def back_to_main_menu(callback: CallbackQuery):
             await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
                                  reply_markup=main_menu)
         elif user.ends_at and user.ends_at < now:
-            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
         elif not user.ends_at:
             await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)
