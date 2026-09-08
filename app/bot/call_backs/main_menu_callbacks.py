@@ -77,23 +77,6 @@ async def profile(callback: CallbackQuery):
                                          f'Статус: ⏳ Нет подписки', reply_markup=main_menu)
 
 
-@main_menu_router.callback_query(F.data == "proxy_tg")
-async def proxy_tg(call: CallbackQuery):
-    await call.answer(text="Пожалуйста, ожидайте...")
-    tg_id = call.from_user.id
-    now = datetime.utcnow()
-    async with AsyncSessionLocal() as session:
-        result_user = await session.execute(select(User).where(User.tg_id == tg_id))
-        user = result_user.scalar_one_or_none()
-
-    if user and user.ends_at > now:
-        await call.message.edit_text(
-            text=f'🥇Чат - @ProxyMTProto\n\nВ данном чате есть прокси для Telegram\nПодключать нужно несколько прокси сразу для лучшей работы мессенджера\n\n🥇Чат - @ProxyMTProto',
-            parse_mode='Markdown', reply_markup=main_menu)
-    else:
-        pass
-
-
 @main_menu_router.callback_query(F.data == 'referral')
 async def referral_info(callback: CallbackQuery):
     await callback.answer('Пожалуйста, ожидайте...')

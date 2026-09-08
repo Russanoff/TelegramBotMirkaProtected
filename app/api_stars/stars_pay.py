@@ -4,7 +4,7 @@ from datetime import datetime
 
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
-from aiogram.types import LabeledPrice, Message, PreCheckoutQuery
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice, Message, PreCheckoutQuery
 
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
@@ -30,6 +30,10 @@ STARS_TARIFFS = {
     365: 999,
 }
 
+back_to_stars_tariffs = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="⬅ Назад", callback_data="stars_pay")]
+])
+
 
 @stars_router.callback_query(F.data.endswith('_accessstars'))
 async def accessstars_day(callback: CallbackQuery):
@@ -40,7 +44,10 @@ async def accessstars_day(callback: CallbackQuery):
         return
 
     await callback.answer('Формирую счёт в Stars...')
-    await callback.message.edit_text(f"Оплата доступа на {days} дней — {amount}⭐\n\nСчёт придёт следующим сообщением")
+    await callback.message.edit_text(
+        f"Оплата доступа на {days} дней — {amount}⭐\n\nСчёт придёт следующим сообщением",
+        reply_markup=back_to_stars_tariffs,
+    )
 
     await callback.bot.send_invoice(
         chat_id=callback.from_user.id,

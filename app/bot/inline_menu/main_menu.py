@@ -10,7 +10,6 @@ main_menu = InlineKeyboardMarkup(inline_keyboard=[
     # [InlineKeyboardButton(text="🇫🇷France", callback_data="FR")],
     # [InlineKeyboardButton(text="🇩🇪Germany", callback_data="GE")],
     # [InlineKeyboardButton(text="🇱🇻Latvija", callback_data="LT")],
-    [InlineKeyboardButton(text='Telegram MTProto', callback_data='proxy_tg')],
     [InlineKeyboardButton(text='🖥Профиль', callback_data='profile'),
     InlineKeyboardButton(text='⚙️Поддержка', callback_data='support')],
     [InlineKeyboardButton(text='🤝Пригласить друга', callback_data='referral')],

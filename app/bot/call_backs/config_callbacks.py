@@ -3,6 +3,7 @@ from aiogram.filters.callback_data import CallbackQuery
 from app.bot.inline_menu.main_menu import main_menu
 from app.bot.inline_menu.config_menu import config_menu
 from app.bot.texts.config_vpn import instruction
+from app.apiux.servers import SERVERS
 from datetime import timedelta, datetime
 from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
@@ -32,9 +33,9 @@ async def back_to_main_menu(callback: CallbackQuery):
 
         if user.ends_at and user.ends_at > now:
             end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
+            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
                                  reply_markup=main_menu)
         elif user.ends_at and user.ends_at < now:
-            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
         elif not user.ends_at:
-            await callback.message.edit_text(f"🟢Активные локации: 5\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)
+            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)

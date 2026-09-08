@@ -6,6 +6,7 @@ from aiogram.filters import CommandStart, CommandObject
 from app.bot.inline_menu.start_menu import keyboard_start
 from app.bot.texts.hello import hello_text
 from app.bot.inline_menu.main_menu import main_menu
+from app.apiux.servers import SERVERS
 
 from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
@@ -52,8 +53,8 @@ async def start_func(message: Message, command: CommandObject):
         else:
             if user.ends_at and user.ends_at > now:
                 end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-                await message.answer(f"🟢Активные локации: 6\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n", reply_markup=main_menu)
+                await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n", reply_markup=main_menu)
             elif user.ends_at and user.ends_at < now:
-                await message.answer(f"🟢Активные локации: 6\n👥Пользователей: {count}\n\nn\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
+                await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nn\nПодписка иcnекла🔴⏳", reply_markup=main_menu)
             elif not user.ends_at:
-                await message.answer(f"🟢Активные локации: 6\n👥Пользователей: {count}\n\n\n\nНет подписки⏳", reply_markup=main_menu)
+                await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\n\n\nНет подписки⏳", reply_markup=main_menu)
