@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from sqlalchemy import select
 
 from app.bot.inline_menu.main_menu import main_menu
@@ -6,6 +7,8 @@ from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 import datetime
 from datetime import timedelta, datetime, date
+
+logger = logging.getLogger(__name__)
 
 
 async def search_dates(session):
@@ -16,16 +19,16 @@ async def search_dates(session):
     result = await session.execute(
         select(User).where(User.ends_at.between(start, end)))
     users = result.scalars().all()
-    print("Проверили базу на просроченные")
+    logger.info("Проверили базу на просроченные: найдено %s пользователей", len(users))
     return users
 
 
 async def send_reminder(bot, session):
     users = await search_dates(session)
 
-    try:
-        for user in users:
-            await bot.send_message(chat_id=user.tg_id, 
+    for user in users:
+        try:
+            await bot.send_message(chat_id=user.tg_id,
                                    text="⚠️Завтра истекает подписка!\n\n"
                                    "Если нет доступа к TG добавте эти временные прокси\n\n"
                                    "Сервер - `ltv.mirkaprotected.ru`\n"
@@ -33,8 +36,8 @@ async def send_reminder(bot, session):
                                    "Сервер - `usa.mirkaprotected.ru`\n"
                                    "Порт - `8010`\nЛогин - `piter`\nПароль - `parker`",
                                    parse_mode='Markdown', reply_markup=main_menu)
-    except Exception as e:
-        print(f"Ошибка: {e}")
+        except Exception:
+            logger.exception("Не удалось отправить напоминание пользователю %s", user.tg_id)
 
 
 

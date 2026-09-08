@@ -1,5 +1,6 @@
+import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
@@ -9,11 +10,10 @@ from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.payment import Payment
-from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.main_menu import main_menu
-from app.apiux.servers import SERVERS
-from app.apiux.new_client import XUI
-from app.bot.referral import grant_referral_bonus
+from app.bot.access import extend_user_access
+
+logger = logging.getLogger(__name__)
 
 stars_router = Router()
 
@@ -70,7 +70,7 @@ async def stars_successful_payment(message: Message):
     try:
         days = int(payment_info.invoice_payload.split(':')[1])
     except (IndexError, ValueError):
-        print("STARS ERROR: не смог разобрать payload:", payment_info.invoice_payload)
+        logger.error("Не смог разобрать payload оплаты Stars: %r", payment_info.invoice_payload)
         await message.answer(
             "Оплата прошла, но не получилось автоматически определить срок. "
             "Напишите в поддержку — @rsfromen."
@@ -87,17 +87,12 @@ async def stars_successful_payment(message: Message):
             user = result_user.scalar_one_or_none()
 
             if not user:
-                print("STARS ERROR: пользователь не найден в БД:", user_id)
+                logger.error("Оплата Stars от неизвестного пользователя %s", user_id)
                 await message.bot.send_message(
                     chat_id=os.getenv('ADMIN_ID'),
                     text=f"Stars: оплата от неизвестного пользователя {user_id}, доступ не выдан автоматически"
                 )
                 return
-
-            if user.ends_at and user.ends_at > now:
-                user.ends_at = user.ends_at + timedelta(days=days)
-            else:
-                user.ends_at = now + timedelta(days=days)
 
             pay_data = Payment(
                 user_id=user_id,
@@ -111,17 +106,7 @@ async def stars_successful_payment(message: Message):
             )
             session.add(pay_data)
 
-            subs_res = await session.execute(select(Subscription).where(Subscription.user_id == user_id))
-            subs = subs_res.scalars().all()
-
-            for sub in subs:
-                server = SERVERS[sub.server_name]
-                xui = XUI(server)
-                await xui.login()
-                await xui.update_expiry(client_name=f"TG_{user_id}", ends_at=user.ends_at, subs_id=sub.sub_id)
-                await xui.close()
-
-            await grant_referral_bonus(session, user, bot=message.bot)
+            await extend_user_access(session, user, days, bot=message.bot)
             await session.commit()
 
         await message.answer(f"Оплата прошла успешно! Доступ продлён на {days} дней", reply_markup=main_menu)
@@ -131,7 +116,7 @@ async def stars_successful_payment(message: Message):
         )
 
     except Exception as e:
-        print("STARS ERROR:", repr(e))
+        logger.exception("Ошибка при выдаче доступа после оплаты Stars у %s", user_id)
         await message.answer(
             "Оплата прошла, но при выдаче доступа произошла ошибка. "
             "Напишите в поддержку — @rsfromen, разберёмся вручную.",

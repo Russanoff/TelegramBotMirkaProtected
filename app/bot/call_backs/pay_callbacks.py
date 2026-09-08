@@ -1,5 +1,6 @@
 
 import asyncio
+import logging
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from aiogram.types import InlineKeyboardButton
@@ -12,6 +13,8 @@ from datetime import datetime
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.payment import Payment
+
+logger = logging.getLogger(__name__)
 
 pay_call = Router()
 
@@ -34,7 +37,7 @@ CRYPTO_DAYS = {
 async def access_days(callback: CallbackQuery):
     days = int(callback.data.split('_')[0])
     amount = TARIFFS.get(days)
-    print(f"Сумма платежа - {amount}")
+    logger.info("Сумма платежа - %s", amount)
     user_id = callback.from_user.id
     msg_id = callback.message.message_id
     now = datetime.utcnow()
@@ -42,7 +45,6 @@ async def access_days(callback: CallbackQuery):
     payment_url, payment_id = create_pay(amount, user_id, msg_id, days)
 
     async with AsyncSessionLocal() as session:
-        result_payment = await session.execute(select(Payment).where(Payment.user_id == None))
         pay_data = Payment(
             user_id=user_id,
             amount=amount,
@@ -81,8 +83,6 @@ async def accesscry_day(callback: CallbackQuery):
     now = datetime.utcnow()
     
     async with AsyncSessionLocal() as session:
-        result_payment = await session.execute(select(Payment).where(Payment.user_id == None))
-        
         pay_data = Payment(
             user_id=user_id,
             amount=amount,

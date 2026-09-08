@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
@@ -7,6 +8,8 @@ from app.db.models.user import User
 from app.db.models.vpn_clients import Subscription
 from app.apiux.servers import SERVERS
 from app.apiux.new_client import XUI
+
+logger = logging.getLogger(__name__)
 
 REFERRAL_BONUS_DAYS = 7
 
@@ -42,8 +45,11 @@ async def grant_referral_bonus(session: AsyncSession, user: User, bot=None) -> N
             await xui.login()
             await xui.update_expiry(client_name=f"TG_{referrer.tg_id}", ends_at=referrer.ends_at, subs_id=sub.sub_id)
             await xui.close()
-        except Exception as e:
-            print("REFERRAL XUI UPDATE ERROR:", repr(e))
+        except Exception:
+            logger.exception(
+                "Не удалось обновить expiry на панели %s для реферера %s",
+                sub.server_name, referrer.tg_id,
+            )
 
     if bot:
         try:

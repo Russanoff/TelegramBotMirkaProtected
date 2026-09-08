@@ -1,25 +1,25 @@
 import json
+import logging
 import os
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi import Request
 
-from app.apiux import servers
 from app.bot.inline_menu.main_menu import main_menu
-from app.db.models.vpn_clients import Subscription
 from main import bot
 
-from datetime import timedelta, datetime
+from datetime import datetime
 
 from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.payment import Payment
-from app.apiux.new_client import XUI
-from app.apiux.servers import SERVERS
 from app.api_main.subs_endpoint import subs_router
-from app.bot.referral import grant_referral_bonus
+from app.bot.access import extend_user_access
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -50,27 +50,11 @@ async def check_payment(request: Request):
                 if not user or not payment:
                     return {"ok": True}
 
-                if user.ends_at and user.ends_at > now:
-                    user.ends_at = user.ends_at + timedelta(days=days)
-                else:
-                    user.ends_at = now + timedelta(days=days)
-
                 if payment.status == "succeeded":
                     return {"ok": True}
                 payment.status = 'succeeded'
 
-                subs_res = await session.execute(select(Subscription).where(Subscription.user_id == user_id))
-                subs = subs_res.scalars().all()
-
-                for sub in subs:
-                    server = SERVERS[sub.server_name]
-                    sub_id = sub.sub_id
-                    xui = XUI(server)
-                    await xui.login()
-                    await xui.update_expiry(client_name=f"TG_{user_id}", ends_at=user.ends_at, subs_id=sub_id)
-                    await xui.close()
-
-                await grant_referral_bonus(session, user, bot=bot)
+                await extend_user_access(session, user, days, bot=bot)
                 await session.commit()
 
                 if msg_id:
@@ -87,7 +71,7 @@ async def check_payment(request: Request):
             await bot.send_message(chat_id=user_id, text="Оплата не прошла! Попробуйте позже", reply_markup=main_menu)
 
     except Exception as e:
-        print("WEBHOOK ERROR:", repr(e))
+        logger.exception("Ошибка при обработке платежа ЮKassa у %s", user_id)
         await bot.send_message(chat_id=user_id,
                                text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                reply_markup=main_menu)

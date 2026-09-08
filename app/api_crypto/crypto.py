@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from dotenv import load_dotenv
 from aiosend import TESTNET, CryptoPay
@@ -7,11 +8,10 @@ from sqlalchemy import select
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.payment import Payment
-from app.db.models.vpn_clients import Subscription
 from app.bot.inline_menu.main_menu import main_menu
-from app.apiux.servers import SERVERS
-from app.apiux.new_client import XUI
-from app.bot.referral import grant_referral_bonus
+from app.bot.access import extend_user_access
+
+logger = logging.getLogger(__name__)
 
 TOKEN=os.getenv('CRYPTO_TOKEN')
 cp = CryptoPay(TOKEN)
@@ -68,27 +68,11 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
                     if not user or not payment:
                         return {"ok": True}
 
-                    if user.ends_at and user.ends_at > now:
-                        user.ends_at = user.ends_at + timedelta(days=days)
-                    else:
-                        user.ends_at = now + timedelta(days=days)
-
                     if payment.status == "succeeded":
                         return {"ok": True}
                     payment.status = 'succeeded'
 
-                    subs_res = await session.execute(select(Subscription).where(Subscription.user_id == user_id))
-                    subs = subs_res.scalars().all()
-                    
-                    for sub in subs:
-                        server = SERVERS[sub.server_name]
-                        sub_id = sub.sub_id
-                        xui = XUI(server)
-                        await xui.login()
-                        await xui.update_expiry(client_name=f"TG_{user_id}", ends_at=user.ends_at, subs_id=sub_id)
-                        await xui.close()
-
-                    await grant_referral_bonus(session, user, bot=bot)
+                    await extend_user_access(session, user, days, bot=bot)
                     await session.commit()
 
                     if msg_id:
@@ -108,7 +92,7 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
                 return
 
         except Exception as e:
-            print("WEBHOOK ERROR:", repr(e))
+            logger.exception("Ошибка при обработке платежа CryptoPay у %s", user_id)
             await bot.send_message(chat_id=user_id,
                                 text="Проверьте доступ!\n\nЕсли возники трудности свяжитесь с техподдержкой - @rsfromen.",
                                 reply_markup=main_menu)
@@ -116,6 +100,5 @@ async def monitor_payment(user_id: int, invoice_id: int, days: int, msg_id: int 
             return
             
     await asyncio.sleep(8)
-    
 
-    print("Invoice expired")
+    logger.info("Invoice expired: %s", invoice_id)
