@@ -5,6 +5,7 @@ from app.db.base import Base
 from app.db.models.user import User
 from app.db.models.payment import Payment
 from app.db.models.vpn_clients import Subscription
+from app.db.models.web_trial import WebTrial
 
 DATABASE_URL = "sqlite+aiosqlite:///./database.db"
 

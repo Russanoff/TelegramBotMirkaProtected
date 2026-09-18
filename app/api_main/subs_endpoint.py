@@ -23,6 +23,62 @@ logger = logging.getLogger(__name__)
 
 subs_router = APIRouter()
 
+
+def build_vless_links(inbounds: dict, sub_id: str, server_name: str) -> list[str]:
+    """Собирает vless-ссылки клиента с данным sub_id из ответа панели (/inbounds/list)."""
+    links = []
+    for inbound in inbounds["obj"]:
+
+        if inbound["protocol"] != "vless":
+            continue
+
+        settings = json.loads(inbound["settings"])
+        stream = json.loads(inbound["streamSettings"])
+
+        clients = settings.get("clients", [])
+
+        for client in clients:
+
+            if client["subId"] != sub_id:
+                continue
+
+            uuid = client["id"]
+            grpc = stream.get("grpcSettings", {})
+            reality = stream.get("realitySettings", {})
+            service_name = grpc.get("serviceName", "")
+            public_key = reality.get("settings", {}).get("publicKey", "")
+            fingerprint = reality.get("settings", {}).get("fingerprint", "chrome")
+
+            sni = (
+                reality.get("serverNames", [""])[0]
+                if reality.get("serverNames")
+                else reality.get("settings", {}).get("serverName", "")
+            )
+
+            short_ids = reality.get("shortIds", [])
+            short_id = short_ids[0]
+            host = SERVERS[server_name]["host"]
+            port = inbound["port"]
+            remark = SERVERS[server_name]["name"]
+
+            vless = (
+                f"vless://{uuid}@{host}:{port}"
+                f"?type=grpc"
+                f"&security=reality"
+                f"&pbk={public_key}"
+                f"&fp={fingerprint}"
+                f"&sni={sni}"
+                f"&sid={short_id}"
+                f"&serviceName={service_name}"
+                f"&encryption=none"
+                f"&authority="
+                f"&spx=%2F"
+                f"#{remark}"
+            )
+
+            links.append(vless)
+    return links
+
 @subs_router.get("/subs/{token}")
 async def get_subscription(token: str):
     async with AsyncSessionLocal() as session:
@@ -71,56 +127,7 @@ async def get_subscription(token: str):
                     sub_id = sub.sub_id
 
                 inbounds = await xui.get_inbounds()
-                for inbound in inbounds["obj"]:
-
-                    if inbound["protocol"] != "vless":
-                        continue
-
-                    settings = json.loads(inbound["settings"])
-                    stream = json.loads(inbound["streamSettings"])
-
-                    clients = settings.get("clients", [])
-
-                    for client in clients:
-
-                        if client["subId"] != sub_id:
-                            continue
-
-                        uuid = client["id"]
-                        grpc = stream.get("grpcSettings", {})
-                        reality = stream.get("realitySettings", {})
-                        service_name = grpc.get("serviceName", "")
-                        public_key = reality.get("settings", {}).get("publicKey", "")
-                        fingerprint = reality.get("settings", {}).get("fingerprint", "chrome")
-
-                        sni = (
-                            reality.get("serverNames", [""])[0]
-                            if reality.get("serverNames")
-                            else reality.get("settings", {}).get("serverName", "")
-                        )
-
-                        short_ids = reality.get("shortIds", [])
-                        short_id = short_ids[0]
-                        host = SERVERS[server_name]["host"]
-                        port = inbound["port"]
-                        remark = SERVERS[server_name]["name"]
-
-                        vless = (
-                            f"vless://{uuid}@{host}:{port}"
-                            f"?type=grpc"
-                            f"&security=reality"
-                            f"&pbk={public_key}"
-                            f"&fp={fingerprint}"
-                            f"&sni={sni}"
-                            f"&sid={short_id}"
-                            f"&serviceName={service_name}"
-                            f"&encryption=none"
-                            f"&authority="
-                            f"&spx=%2F"
-                            f"#{remark}"
-                        )
-
-                        links.append(vless)
+                links.extend(build_vless_links(inbounds, sub_id, server_name))
             except Exception:
                 # Одна недоступная панель не должна ронять весь ответ -
                 # пользователь всё равно должен получить ссылки с рабочих серверов.

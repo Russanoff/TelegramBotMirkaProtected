@@ -11,6 +11,7 @@ from app.apiux.servers import SERVERS
 from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
+from app.db.models.web_trial import WebTrial
 from datetime import timedelta, datetime
 
 
@@ -22,7 +23,20 @@ async def start_func(message: Message, command: CommandObject):
     tg_id = message.from_user.id
     ref_payload = command.args
 
+    # Переход с лендинга: /start web_<token> - привязываем пробный доступ к Telegram-аккаунту
+    web_token = None
+    if ref_payload and ref_payload.startswith("web_"):
+        web_token = ref_payload[len("web_"):]
+        ref_payload = None
+
     async with AsyncSessionLocal() as session:
+        if web_token:
+            trial = (await session.execute(
+                select(WebTrial).where(WebTrial.token == web_token))).scalar_one_or_none()
+            if trial and trial.tg_id is None:
+                trial.tg_id = tg_id
+                await session.commit()
+
         result = await session.execute(select(User).where(User.tg_id == tg_id))
         result_count = await session.execute(select(func.count(User.id)))
         count = result_count.scalar()

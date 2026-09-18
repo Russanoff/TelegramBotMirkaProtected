@@ -15,10 +15,11 @@ from main import bot
 from datetime import datetime
 
 from sqlalchemy import select
-from app.db.database import AsyncSessionLocal
+from app.db.database import AsyncSessionLocal, init_db
 from app.db.models.user import User
 from app.db.models.payment import Payment
 from app.api_main.subs_endpoint import subs_router
+from app.api_main.trial_endpoint import trial_router
 from app.bot.access import extend_user_access
 
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +30,15 @@ yookassa.Configuration.secret_key = os.getenv("SECRET_KEY")
 
 app = FastAPI()
 
+
+@app.on_event("startup")
+async def _ensure_tables():
+    # Таблицы создаёт и бот, но API может подняться раньше него после деплоя.
+    await init_db()
+
+
 app.include_router(subs_router)
+app.include_router(trial_router)
 
 @app.post('/yookassa/check_pay')
 async def check_payment(request: Request):

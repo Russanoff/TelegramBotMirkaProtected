@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MirkaProtected — доступ к Telegram</title>
+<meta name="description" content="Бесплатный VPN на 48 часов, чтобы зайти в Telegram и продолжить в боте MirkaProtected.">
+<meta name="theme-color" content="#e6f4f8">
+<link rel="icon" href="/static/logo.png">
+<style>
+  :root {
+    --bg: #e6f4f8;            /* однотонный фон страницы */
+    --card: #ffffff;
+    --ink: #0f2a4a;
+    --muted: #55708a;
+    --blue: #2b6cb0;
+    --teal: #2cbfb8;
+    --line: #d5e6ee;
+    --grad: linear-gradient(135deg, var(--blue), var(--teal));
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  /* у логотипа светлый фон, поэтому он лежит в такой же белой карточке, как и блоки ниже */
+  .logo-card {
+    width: 220px; max-width: 70%; margin: 0 auto 18px; padding: 10px; background: #fff;
+    border-radius: 28px; box-shadow: 0 6px 24px rgba(15, 42, 74, .07); overflow: hidden;
+  }
+  .logo { display: block; width: 100%; height: auto; border-radius: 18px; }
+  .wordmark { display: none; text-align: center; font-size: 26px; font-weight: 800; margin: 12px 0; }
+  .wordmark b { color: var(--blue); }
+  h1 { font-size: 28px; line-height: 1.2; text-align: center; margin: 8px 0 10px; }
+  .lead { text-align: center; color: var(--muted); margin: 0 auto 24px; max-width: 480px; }
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 20px;
+    margin-bottom: 14px; box-shadow: 0 6px 24px rgba(15, 42, 74, .07);
+  }
+  .step { display: flex; gap: 14px; align-items: flex-start; }
+  .num {
+    flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--grad);
+    color: #fff; font-weight: 700; display: grid; place-items: center;
+  }
+  .step h2 { font-size: 18px; margin: 4px 0 6px; }
+  .step p { margin: 0 0 12px; color: var(--muted); }
+  .body { flex: 1; min-width: 0; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; padding: 0 22px; border: 0; border-radius: 14px; cursor: pointer;
+    background: var(--grad); color: #fff; font-family: inherit; font-weight: 600; font-size: 16px; line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(43, 108, 176, .28); transition: transform .12s, box-shadow .12s, opacity .12s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(43, 108, 176, .32); }
+  .btn:active { transform: translateY(0); }
+  .btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+  .btn[disabled] { opacity: .6; cursor: default; transform: none; }
+  .btn.block { width: 100%; }
+  .btn.ghost { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); box-shadow: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .row .btn { min-height: 42px; padding: 0 16px; font-size: 14px; flex: 1 1 auto; }
+  .linkbox {
+    display: flex; gap: 8px; align-items: stretch; margin-top: 4px;
+  }
+  .linkbox input {
+    flex: 1; min-width: 0; height: 46px; padding: 0 12px; border-radius: 12px;
+    border: 1.5px solid var(--line); background: #f5fafc; color: var(--ink);
+    font: 14px ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .linkbox .btn { min-height: 46px; padding: 0 16px; }
+  .hint { font-size: 14px; color: var(--muted); margin: 10px 0 0; }
+  .timer { font-weight: 700; color: var(--blue); }
+  .error {
+    background: #fdecec; color: #9b1c1c; border-radius: 12px; padding: 10px 12px;
+    margin-top: 12px; font-size: 14px;
+  }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab {
+    border: 1.5px solid var(--line); background: #fff; color: var(--muted); border-radius: 999px;
+    padding: 9px 14px; font-family: inherit; font-weight: 600; font-size: 14px; line-height: 1; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--grad); border-color: transparent; color: #fff; }
+  .panel { display: none; }
+  .panel.on { display: block; }
+  .panel ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
+  .panel li { margin-bottom: 4px; }
+  .locked { opacity: .55; }
+  .warn {
+    border: 1.5px solid var(--teal); background: #effbfa; border-radius: 12px;
+    padding: 10px 12px; font-size: 14px; margin-bottom: 12px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 22px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 480px) {
+    .card { padding: 16px; }
+    .step { gap: 10px; }
+    .linkbox { flex-direction: column; }
+    .linkbox .btn { width: 100%; }
+    h1 { font-size: 25px; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="logo-card">
+    <img class="logo" src="/static/logo.png" alt="MirkaProtected"
+         onerror="this.parentNode.style.display='none';document.querySelector('.wordmark').style.display='block'">
+  </div>
+  <div class="wordmark"><b>Mirka</b>Protected</div>
+
+  <h1>Telegram не открывается?</h1>
+  <p class="lead">Получите бесплатный VPN на 48 часов, зайдите в Telegram и закрепите доступ в нашем боте.</p>
+
+  <section class="card">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="body">
+        <h2>Получить бесплатный доступ</h2>
+        <p>Без регистрации и входа в Telegram. Ссылка действует 48 часов.</p>
+        <button class="btn block" id="get" type="button">Получить доступ</button>
+        <div class="error" id="err" hidden></div>
+
+        <div id="result" hidden>
+          <div class="linkbox">
+            <input id="sub" readonly aria-label="Ссылка-подписка">
+            <button class="btn" id="copy" type="button">Копировать</button>
+          </div>
+          <div class="row">
+            <a class="btn ghost" id="open-hiddify" href="#">Hiddify</a>
+            <a class="btn ghost" id="open-v2rayng" href="#">v2rayNG</a>
+            <a class="btn ghost" id="open-streisand" href="#">Streisand</a>
+          </div>
+          <p class="hint">Осталось: <span class="timer" id="timer">48:00:00</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="step">
+      <div class="num">2</div>
+      <div class="body">
+        <h2>Установить приложение</h2>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-p="android">Android</button>
+          <button class="tab" role="tab" aria-selected="false" data-p="ios">iPhone</button>
+          <button class="tab" role="tab" aria-selected="false" data-p="pc">Windows / Mac</button>
+        </div>
+        <div class="panel on" id="p-android">
+          <a class="btn" href="https://play.google.com/store/apps/details?id=com.v2ray.ang" rel="noopener">Скачать v2rayNG</a>
+          <ol>
+            <li>Установите приложение и откройте его.</li>
+            <li>Нажмите кнопку v2rayNG выше или «+» → «Импорт подписки» и вставьте ссылку.</li>
+            <li>Обновите подписку, выберите сервер и нажмите кнопку подключения.</li>
+          </ol>
+        </div>
+        <div class="panel" id="p-ios">
+          <a class="btn" href="https://apps.apple.com/app/streisand/id6450534064" rel="noopener">Скачать Streisand</a>
+          <ol>
+            <li>Установите приложение и откройте его.</li>
+            <li>Нажмите кнопку Streisand выше или добавьте подписку по ссылке из шага 1.</li>
+            <li>Выберите сервер и включите VPN.</li>
+          </ol>
+        </div>
+        <div class="panel" id="p-pc">
+          <a class="btn" href="https://github.com/hiddify/hiddify-app/releases/latest" rel="noopener">Скачать Hiddify</a>
+          <ol>
+            <li>Установите Hiddify и откройте его.</li>
+            <li>Нажмите «Новый профиль» → «Добавить из буфера обмена» (ссылка уже скопирована кнопкой выше).</li>
+            <li>Включите подключение.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card locked" id="step3">
+    <div class="step">
+      <div class="num">3</div>
+      <div class="body">
+        <h2>Закрепить доступ в боте</h2>
+        <div class="warn">Без этого шага доступ закончится через 48 часов. Продлить и оплатить его можно только в боте.</div>
+        <a class="btn block" id="bot" href="#" rel="noopener">Перейти в Telegram-бот</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>MirkaProtected · @mirkaprotecbot</footer>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var endsAt = null;
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function tick() {
+    if (!endsAt) return;
+    var s = Math.max(0, Math.floor((endsAt - Date.now()) / 1000));
+    $("timer").textContent = pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s % 3600 / 60)) + ":" + pad(s % 60);
+  }
+  setInterval(tick, 1000);
+
+  function show(data) {
+    var url = data.sub_url;
+    endsAt = new Date(data.ends_at).getTime();
+    $("sub").value = url;
+    $("open-hiddify").href = "hiddify://import/" + url + "#MirkaProtected";
+    $("open-v2rayng").href = "v2rayng://install-sub?url=" + encodeURIComponent(url);
+    $("open-streisand").href = "streisand://import/" + url;
+    $("bot").href = data.bot_url;
+    $("step3").classList.remove("locked");
+    $("result").hidden = false;
+    $("get").textContent = "Доступ получен";
+    $("get").disabled = true;
+    tick();
+  }
+
+  function fail(msg) {
+    $("err").textContent = msg;
+    $("err").hidden = false;
+    $("get").disabled = false;
+    $("get").textContent = "Попробовать ещё раз";
+  }
+
+  $("get").addEventListener("click", function () {
+    $("err").hidden = true;
+    $("get").disabled = true;
+    $("get").textContent = "Создаём доступ…";
+    fetch("/api/trial", { method: "POST", credentials: "same-origin" })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
+      })
+      .then(function (res) {
+        if (res.ok) { show(res.d); } else { fail(res.d.error || "Не получилось. Попробуйте ещё раз."); }
+      })
+      .catch(function () { fail("Нет соединения. Проверьте интернет и повторите."); });
+  });
+
+  $("copy").addEventListener("click", function () {
+    var input = $("sub");
+    var done = function () { $("copy").textContent = "Скопировано"; setTimeout(function () { $("copy").textContent = "Копировать"; }, 1800); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(input.value).then(done, function () { input.select(); document.execCommand("copy"); done(); });
+    } else { input.select(); document.execCommand("copy"); done(); }
+  });
+
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-selected", x === t); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.toggle("on", p.id === "p-" + t.dataset.p); });
+    });
+  });
+})();
+</script>
+</body>
+</html>
