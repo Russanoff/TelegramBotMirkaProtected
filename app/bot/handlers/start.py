@@ -25,6 +25,7 @@ async def start_func(message: Message, command: CommandObject):
 
     # Переход с лендинга: /start web_<token> - привязываем пробный доступ к Telegram-аккаунту
     web_token = None
+    web_referrer = None
     if ref_payload and ref_payload.startswith("web_"):
         web_token = ref_payload[len("web_"):]
         ref_payload = None
@@ -33,8 +34,11 @@ async def start_func(message: Message, command: CommandObject):
         if web_token:
             trial = (await session.execute(
                 select(WebTrial).where(WebTrial.token == web_token))).scalar_one_or_none()
+            # Триал привязывается только к первому, кто его открыл: пересланный токен
+            # не даёт ни второго реферера, ни чужого триала.
             if trial and trial.tg_id is None:
                 trial.tg_id = tg_id
+                web_referrer = trial.referrer_id
                 await session.commit()
 
         result = await session.execute(select(User).where(User.tg_id == tg_id))
@@ -45,6 +49,10 @@ async def start_func(message: Message, command: CommandObject):
 
         if user is None:
             referrer_id = None
+            if web_referrer and web_referrer != tg_id:
+                ref_result = await session.execute(select(User).where(User.tg_id == web_referrer))
+                if ref_result.scalar_one_or_none():
+                    referrer_id = web_referrer
             if ref_payload:
                 try:
                     candidate_id = int(ref_payload)

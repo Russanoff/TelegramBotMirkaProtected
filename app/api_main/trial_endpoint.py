@@ -14,6 +14,7 @@ from app.api_main.subs_endpoint import build_vless_links
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
 from app.db.database import AsyncSessionLocal
+from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,14 @@ async def _ensure_clients(session, trial: WebTrial) -> dict:
         return sub_ids
 
 
+async def _valid_referrer(session, raw: str | None) -> int | None:
+    """tg_id пригласившего из ?ref=, только если такой пользователь бота существует."""
+    if not raw or not raw.isdigit() or len(raw) > 15:
+        return None
+    result = await session.execute(select(User.tg_id).where(User.tg_id == int(raw)))
+    return result.scalar_one_or_none()
+
+
 def _payload(trial: WebTrial) -> dict:
     return {
         "sub_url": f"{PUBLIC_URL}/t/{trial.token}",
@@ -120,7 +129,8 @@ async def create_trial(request: Request):
                     status_code=429)
 
             trial = WebTrial(
-                token=secrets.token_urlsafe(12), ip=ip, ends_at=now + datetime.timedelta(hours=TRIAL_HOURS))
+                token=secrets.token_urlsafe(12), ip=ip, ends_at=now + datetime.timedelta(hours=TRIAL_HOURS),
+                referrer_id=await _valid_referrer(session, request.query_params.get("ref")))
             session.add(trial)
             await session.commit()
 

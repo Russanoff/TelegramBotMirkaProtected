@@ -18,7 +18,12 @@ def _add_missing_columns(sync_conn):
     # create_all() не добавляет колонки в уже существующие таблицы,
     # поэтому новые поля на уже развёрнутой БД нужно доливать вручную.
     inspector = inspect(sync_conn)
-    if "users" not in inspector.get_table_names():
+    tables = inspector.get_table_names()
+    if "web_trials" in tables:
+        trial_cols = {col["name"] for col in inspector.get_columns("web_trials")}
+        if "referrer_id" not in trial_cols:
+            sync_conn.execute(text("ALTER TABLE web_trials ADD COLUMN referrer_id BIGINT"))
+    if "users" not in tables:
         return
     existing = {col["name"] for col in inspector.get_columns("users")}
     if "referrer_id" not in existing:

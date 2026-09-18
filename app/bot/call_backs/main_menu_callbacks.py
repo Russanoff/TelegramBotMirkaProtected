@@ -83,6 +83,7 @@ async def referral_info(callback: CallbackQuery):
     tg_id = callback.from_user.id
     bot_user = await callback.bot.get_me()
     link = f"https://t.me/{bot_user.username}?start={tg_id}"
+    site_link = f"https://trial.mirkaprotected.ru/?ref={tg_id}"
 
     async with AsyncSessionLocal() as session:
         count_result = await session.execute(
@@ -97,6 +98,8 @@ async def referral_info(callback: CallbackQuery):
         f"🤝Приглашайте друзей и получайте бонусные дни подписки!\n\n"
         f"За каждого друга, который оплатит подписку, вам начислится {REFERRAL_BONUS_DAYS} дней доступа.\n\n"
         f"Ваша реферальная ссылка:\n`{link}`\n\n"
+        f"Если у друга не открывается Telegram, отправьте ему эту ссылку - он получит бесплатный "
+        f"доступ на сайте, затем перейдёт в бота, и бонус тоже будет ваш:\n`{site_link}`\n\n"
         f"Приглашено друзей (оплативших): {count}",
         parse_mode='Markdown',
         reply_markup=main_menu,

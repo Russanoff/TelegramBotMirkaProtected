@@ -231,7 +231,9 @@
     $("err").hidden = true;
     $("get").disabled = true;
     $("get").textContent = "Создаём доступ…";
-    fetch("/api/trial", { method: "POST", credentials: "same-origin" })
+    var ref = new URLSearchParams(location.search).get("ref");
+    var url = "/api/trial" + (ref && /^\d{1,15}$/.test(ref) ? "?ref=" + ref : "");
+    fetch(url, { method: "POST", credentials: "same-origin" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
       })

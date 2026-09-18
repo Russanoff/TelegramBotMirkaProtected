@@ -19,3 +19,5 @@ class WebTrial(Base):
     sub_ids: Mapped[str] = mapped_column(Text, default="{}")
     # заполняется, когда гость открыл бота по deep-link
     tg_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
+    # tg_id пригласившего, если гость пришёл по реферальной ссылке на сайт (/?ref=<tg_id>)
+    referrer_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
