@@ -12,6 +12,7 @@ from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
+from app.bot.texts.web_trial import web_trial_hint
 from datetime import timedelta, datetime
 
 
@@ -26,6 +27,7 @@ async def start_func(message: Message, command: CommandObject):
     # Переход с лендинга: /start web_<token> - привязываем пробный доступ к Telegram-аккаунту
     web_token = None
     web_referrer = None
+    web_bound = False
     if ref_payload and ref_payload.startswith("web_"):
         web_token = ref_payload[len("web_"):]
         ref_payload = None
@@ -39,6 +41,7 @@ async def start_func(message: Message, command: CommandObject):
             if trial and trial.tg_id is None:
                 trial.tg_id = tg_id
                 web_referrer = trial.referrer_id
+                web_bound = True
                 await session.commit()
 
         result = await session.execute(select(User).where(User.tg_id == tg_id))
@@ -80,3 +83,7 @@ async def start_func(message: Message, command: CommandObject):
                 await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
             elif not user.ends_at:
                 await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\n\n\nНет подписки⏳", reply_markup=main_menu)
+
+            # Условия уже приняты раньше, значит ссылка с сайта расширяется сразу
+            if web_bound:
+                await message.answer(web_trial_hint.format(count=len(SERVERS)))

@@ -5,6 +5,9 @@ from app.bot.inline_menu.main_menu import main_menu
 from app.bot.inline_menu.start_menu import confirm_menu
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
+from app.db.models.web_trial import WebTrial
+from app.apiux.servers import SERVERS
+from app.bot.texts.web_trial import web_trial_hint
 from sqlalchemy import select
 
 
@@ -30,5 +33,13 @@ async def open_main_menu(callback: CallbackQuery):
         user.accepted_terms = True
         await session.commit()
 
+        # Пришёл с сайта: с этого момента его ссылка с сайта отдаёт все локации
+        trial_result = await session.execute(select(WebTrial.id).where(WebTrial.tg_id == tg_user).limit(1))
+        came_from_site = trial_result.scalar_one_or_none() is not None
+
+    text = 'Соглашение принято! Добро пожаловать в Главное меню MirkaProtected!\n\n'
+    if came_from_site:
+        text += web_trial_hint.format(count=len(SERVERS))
+
     await callback.answer('Соглашение принято!')
-    await callback.message.edit_text('Соглашение принято! Добро пожаловать в Главное меню MirkaProtected!\n\n', reply_markup=main_menu)
+    await callback.message.edit_text(text, reply_markup=main_menu)
