@@ -48,6 +48,10 @@
   .step h2 { font-size: 18px; margin: 4px 0 6px; }
   .step p { margin: 0 0 12px; color: var(--muted); }
   .body { flex: 1; min-width: 0; }
+  .badge {
+    display: inline-block; vertical-align: middle; margin-left: 6px; padding: 3px 9px; border-radius: 999px;
+    background: #effbfa; color: #0f766e; border: 1px solid var(--teal); font-size: 12px; font-weight: 700;
+  }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     min-height: 48px; padding: 0 22px; border: 0; border-radius: 14px; cursor: pointer;
@@ -62,10 +66,8 @@
   .btn.block { width: 100%; }
   .btn.ghost { background: #fff; color: var(--blue); border: 1.5px solid var(--blue); box-shadow: none; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .row .btn { min-height: 42px; padding: 0 16px; font-size: 14px; flex: 1 1 auto; }
-  .linkbox {
-    display: flex; gap: 8px; align-items: stretch; margin-top: 4px;
-  }
+  .row .btn { min-height: 44px; padding: 0 16px; font-size: 15px; flex: 1 1 auto; }
+  .linkbox { display: flex; gap: 8px; align-items: stretch; margin-top: 4px; }
   .linkbox input {
     flex: 1; min-width: 0; height: 46px; padding: 0 12px; border-radius: 12px;
     border: 1.5px solid var(--line); background: #f5fafc; color: var(--ink);
@@ -86,19 +88,31 @@
   .tab[aria-selected="true"] { background: var(--grad); border-color: transparent; color: #fff; }
   .panel { display: none; }
   .panel.on { display: block; }
-  .panel ol { margin: 8px 0 0; padding-left: 20px; color: var(--muted); }
-  .panel li { margin-bottom: 4px; }
-  .locked { opacity: .55; }
+  .note { font-size: 14px; color: var(--muted); margin: 10px 0 0; }
+  .alt { font-size: 14px; color: var(--muted); margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+  .alt a { color: var(--blue); font-weight: 600; }
+  .todo { margin: 0 0 14px; padding: 0; list-style: none; counter-reset: t; }
+  .todo li {
+    counter-increment: t; position: relative; padding: 0 0 10px 34px; color: var(--ink);
+  }
+  .todo li::before {
+    content: counter(t); position: absolute; left: 0; top: 1px; width: 24px; height: 24px; border-radius: 50%;
+    background: #effbfa; color: #0f766e; border: 1.5px solid var(--teal);
+    font-size: 13px; font-weight: 700; display: grid; place-items: center;
+  }
+  .todo small { display: block; color: var(--muted); font-size: 14px; }
   .warn {
     border: 1.5px solid var(--teal); background: #effbfa; border-radius: 12px;
-    padding: 10px 12px; font-size: 14px; margin-bottom: 12px;
+    padding: 10px 12px; font-size: 14px; margin-bottom: 14px;
   }
+  .locked .btn { pointer-events: none; opacity: .55; }
   footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 22px; }
   [hidden] { display: none !important; }
   @media (max-width: 480px) {
     .card { padding: 16px; }
     .step { gap: 10px; }
     .linkbox { flex-direction: column; }
+    .linkbox input { flex: none; width: 100%; }
     .linkbox .btn { width: 100%; }
     h1 { font-size: 25px; }
   }
@@ -113,29 +127,37 @@
   <div class="wordmark"><b>Mirka</b>Protected</div>
 
   <h1>Telegram не открывается?</h1>
-  <p class="lead">Получите бесплатный VPN на 48 часов, зайдите в Telegram и закрепите доступ в нашем боте.</p>
+  <p class="lead">Получите бесплатный VPN на 48 часов, зайдите в Telegram и оформите постоянный доступ в нашем боте.</p>
 
   <section class="card">
     <div class="step">
       <div class="num">1</div>
       <div class="body">
-        <h2>Получить бесплатный доступ</h2>
-        <p>Без регистрации и входа в Telegram. Ссылка действует 48 часов.</p>
-        <button class="btn block" id="get" type="button">Получить доступ</button>
-        <div class="error" id="err" hidden></div>
-
-        <div id="result" hidden>
-          <div class="linkbox">
-            <input id="sub" readonly aria-label="Ссылка-подписка">
-            <button class="btn" id="copy" type="button">Копировать</button>
-          </div>
-          <div class="row">
-            <a class="btn ghost" id="open-hiddify" href="#">Hiddify</a>
-            <a class="btn ghost" id="open-v2rayng" href="#">v2rayNG</a>
-            <a class="btn ghost" id="open-streisand" href="#">Streisand</a>
-          </div>
-          <p class="hint">Осталось: <span class="timer" id="timer">48:00:00</span></p>
+        <h2>Установите приложение Happ <span class="badge">рекомендуем</span></h2>
+        <p>Это программа, через которую работает VPN. Выберите своё устройство:</p>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-p="android">Android</button>
+          <button class="tab" role="tab" aria-selected="false" data-p="ios">iPhone</button>
+          <button class="tab" role="tab" aria-selected="false" data-p="pc">Windows / Mac</button>
         </div>
+        <div class="panel on" id="p-android">
+          <div class="row" style="margin-top:0">
+            <a class="btn" href="https://play.google.com/store/apps/details?id=com.happproxy" rel="noopener">Google Play</a>
+            <a class="btn ghost" href="https://disk.yandex.ru/d/RiWSvitvemx1UQ" rel="noopener">Скачать APK (Яндекс Диск)</a>
+          </div>
+          <p class="note">Google Play не открывается? Скачайте файл с Яндекс Диска и установите его. Телефон может попросить разрешить установку из этого источника, согласитесь.</p>
+        </div>
+        <div class="panel" id="p-ios">
+          <a class="btn" href="https://apps.apple.com/us/app/happ-proxy-utility/id6504287215" rel="noopener">Happ в App Store</a>
+          <p class="note">Ищите именно «Happ - Proxy Utility». В российском App Store приложения может не быть, тогда понадобится Apple ID другой страны. Если не получается, напишите нам в поддержку в боте.</p>
+        </div>
+        <div class="panel" id="p-pc">
+          <div class="row" style="margin-top:0">
+            <a class="btn" href="https://github.com/Happ-proxy/happ-desktop/releases/latest/download/setup-Happ.x64.exe" rel="noopener">Для Windows</a>
+            <a class="btn" href="https://github.com/Happ-proxy/happ-desktop/releases/latest/download/Happ.macOS.universal.dmg" rel="noopener">Для Mac</a>
+          </div>
+        </div>
+        <p class="alt">Happ не подошёл? Можно использовать <a href="https://github.com/hiddify/hiddify-app/releases/latest" rel="noopener">Hiddify</a>, он работает так же.</p>
       </div>
     </div>
   </section>
@@ -144,35 +166,23 @@
     <div class="step">
       <div class="num">2</div>
       <div class="body">
-        <h2>Установить приложение</h2>
-        <div class="tabs" role="tablist">
-          <button class="tab" role="tab" aria-selected="true" data-p="android">Android</button>
-          <button class="tab" role="tab" aria-selected="false" data-p="ios">iPhone</button>
-          <button class="tab" role="tab" aria-selected="false" data-p="pc">Windows / Mac</button>
-        </div>
-        <div class="panel on" id="p-android">
-          <a class="btn" href="https://play.google.com/store/apps/details?id=com.v2ray.ang" rel="noopener">Скачать v2rayNG</a>
-          <ol>
-            <li>Установите приложение и откройте его.</li>
-            <li>Нажмите кнопку v2rayNG выше или «+» → «Импорт подписки» и вставьте ссылку.</li>
-            <li>Обновите подписку, выберите сервер и нажмите кнопку подключения.</li>
-          </ol>
-        </div>
-        <div class="panel" id="p-ios">
-          <a class="btn" href="https://apps.apple.com/app/streisand/id6450534064" rel="noopener">Скачать Streisand</a>
-          <ol>
-            <li>Установите приложение и откройте его.</li>
-            <li>Нажмите кнопку Streisand выше или добавьте подписку по ссылке из шага 1.</li>
-            <li>Выберите сервер и включите VPN.</li>
-          </ol>
-        </div>
-        <div class="panel" id="p-pc">
-          <a class="btn" href="https://github.com/hiddify/hiddify-app/releases/latest" rel="noopener">Скачать Hiddify</a>
-          <ol>
-            <li>Установите Hiddify и откройте его.</li>
-            <li>Нажмите «Новый профиль» → «Добавить из буфера обмена» (ссылка уже скопирована кнопкой выше).</li>
-            <li>Включите подключение.</li>
-          </ol>
+        <h2>Получите доступ и добавьте его в приложение</h2>
+        <p>Без регистрации и входа в Telegram. Доступ действует 48 часов.</p>
+        <button class="btn block" id="get" type="button">Получить бесплатный доступ</button>
+        <div class="error" id="err" hidden></div>
+
+        <div id="result" hidden>
+          <p class="note" style="margin-top:14px">Доступ готов. Нажмите кнопку с вашим приложением, оно само добавит все серверы:</p>
+          <div class="row">
+            <a class="btn" id="open-happ" href="#">Открыть в Happ</a>
+            <a class="btn ghost" id="open-hiddify" href="#">Открыть в Hiddify</a>
+          </div>
+          <p class="note">Не сработало? Скопируйте ссылку, в приложении нажмите «+» и добавьте её из буфера обмена.</p>
+          <div class="linkbox">
+            <input id="sub" readonly aria-label="Ссылка-подписка">
+            <button class="btn" id="copy" type="button">Копировать</button>
+          </div>
+          <p class="hint">Затем нажмите в приложении большую кнопку подключения. Осталось времени: <span class="timer" id="timer">48:00:00</span></p>
         </div>
       </div>
     </div>
@@ -182,9 +192,14 @@
     <div class="step">
       <div class="num">3</div>
       <div class="body">
-        <h2>Закрепить доступ в боте</h2>
-        <div class="warn">Без этого шага доступ закончится через 48 часов. Продлить и оплатить его можно только в боте.</div>
-        <a class="btn block" id="bot" href="#" rel="noopener">Перейти в Telegram-бот</a>
+        <h2>Откройте нашего бота в Telegram</h2>
+        <div class="warn">Доступ с сайта работает только 48 часов. Продлить его и оплатить подписку можно только в боте, поэтому этот шаг обязателен.</div>
+        <ol class="todo">
+          <li>Включите VPN в Happ<small>Когда VPN включён, Telegram открывается.</small></li>
+          <li>Нажмите кнопку ниже<small>Откроется Telegram с нашим ботом @mirkaprotecbot.</small></li>
+          <li>В боте нажмите «Старт»<small>Бот запомнит вас, и вы сможете продлить доступ, когда он закончится.</small></li>
+        </ol>
+        <a class="btn block" id="bot" href="#" rel="noopener" aria-disabled="true">Сначала получите доступ (шаг 2)</a>
       </div>
     </div>
   </section>
@@ -209,10 +224,11 @@
     var url = data.sub_url;
     endsAt = new Date(data.ends_at).getTime();
     $("sub").value = url;
+    $("open-happ").href = "happ://add/" + url;
     $("open-hiddify").href = "hiddify://import/" + url + "#MirkaProtected";
-    $("open-v2rayng").href = "v2rayng://install-sub?url=" + encodeURIComponent(url);
-    $("open-streisand").href = "streisand://import/" + url;
     $("bot").href = data.bot_url;
+    $("bot").textContent = "Открыть бота в Telegram";
+    $("bot").removeAttribute("aria-disabled");
     $("step3").classList.remove("locked");
     $("result").hidden = false;
     $("get").textContent = "Доступ получен";
