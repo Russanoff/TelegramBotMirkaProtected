@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from sqlalchemy import func, select
 
-from app.api_main.subs_endpoint import build_vless_links
+from app.api_main.subs_endpoint import build_vless_links, get_subscription
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
 from app.db.database import AsyncSessionLocal
@@ -23,6 +23,9 @@ trial_router = APIRouter()
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 TRIAL_HOURS = 48
+# Триал с сайта даёт только эти локации (ключи SERVERS); остальные - в боте.
+# Польша - стабильная, США - для YouTube и Meta.
+TRIAL_SERVERS = ("PL", "USA")
 MAX_TRIALS_PER_IP = 2          # за окно IP_WINDOW_HOURS (за одним мобильным NAT сидят многие)
 IP_WINDOW_HOURS = 24
 PANEL_TIMEOUT = 25             # сек на одну панель, чтобы одна упавшая не вешала страницу
@@ -65,7 +68,7 @@ async def _ensure_clients(session, trial: WebTrial) -> dict:
     lock = _locks.setdefault(trial.token, asyncio.Lock())
     async with lock:
         sub_ids = json.loads(trial.sub_ids or "{}")
-        missing = [name for name in SERVERS if name not in sub_ids]
+        missing = [name for name in TRIAL_SERVERS if name in SERVERS and name not in sub_ids]
         if missing:
             results = await asyncio.gather(*(_provision_one(n, trial) for n in missing))
             for name, sub_id in results:
@@ -172,10 +175,27 @@ async def trial_subscription(token: str):
             select(WebTrial).where(WebTrial.token == token))).scalar_one_or_none()
         if trial is None:
             raise HTTPException(status_code=404, detail="Not found")
-        if trial.ends_at <= now:
-            raise HTTPException(status_code=410, detail="Trial expired")
 
-        sub_ids = await _ensure_clients(session, trial)
+        # Гость открыл бота и принял условия: эта же ссылка становится его личной
+        # подпиской (все локации, срок из бота), второй раз ничего добавлять не нужно.
+        if trial.tg_id:
+            user = (await session.execute(
+                select(User).where(User.tg_id == trial.tg_id))).scalar_one_or_none()
+            if user and user.accepted_terms:
+                user_token = user.token
+            else:
+                user_token = None
+        else:
+            user_token = None
+
+        if user_token is None:
+            if trial.ends_at <= now:
+                raise HTTPException(status_code=410, detail="Trial expired")
+            sub_ids = await _ensure_clients(session, trial)
+
+    if user_token is not None:
+        # вне сессии: get_subscription открывает свою и пишет в SQLite
+        return await get_subscription(user_token)
 
     per_server = await asyncio.gather(*(_links_for(n, s) for n, s in sub_ids.items()))
     links = [link for chunk in per_server for link in chunk]
