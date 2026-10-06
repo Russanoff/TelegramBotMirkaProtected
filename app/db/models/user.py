@@ -18,3 +18,5 @@ class User(Base):
     token: Mapped[str] = mapped_column(String(260), default=False)
     referrer_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     referral_bonus_granted: Mapped[bool] = mapped_column(Boolean, default=False)
+    # когда пользователю отправляли «вернитесь, оплатить можно через сайт»; NULL = не отправляли
+    last_winback_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)

@@ -14,6 +14,8 @@ from app.bot.admin.postman import postman_router as postman
 from app.bot.admin.reminder import checker_bot
 from app.bot.admin.delete    import delete_router as del_router
 from app.bot.admin.referral_stats import referral_stats_router
+from app.bot.admin.winback import winback_router
+from app.bot.admin.fixnode import fixnode_router
 from dotenv import load_dotenv
 import os
 
@@ -36,6 +38,8 @@ async def main():
     dp.include_router(postman)
     dp.include_router(del_router)
     dp.include_router(referral_stats_router)
+    dp.include_router(winback_router)
+    dp.include_router(fixnode_router)
     asyncio.create_task(checker_bot(bot))
     await dp.start_polling(bot)
 

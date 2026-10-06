@@ -7,7 +7,8 @@ from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 from app.apiux.servers import SERVERS
-from app.bot.texts.web_trial import web_trial_hint
+from app.bot.texts.web_trial import web_trial_hint_text
+from datetime import datetime
 from sqlalchemy import select
 
 
@@ -33,13 +34,15 @@ async def open_main_menu(callback: CallbackQuery):
         user.accepted_terms = True
         await session.commit()
 
-        # Пришёл с сайта: с этого момента его ссылка с сайта отдаёт все локации
-        trial_result = await session.execute(select(WebTrial.id).where(WebTrial.tg_id == tg_user).limit(1))
-        came_from_site = trial_result.scalar_one_or_none() is not None
+        # Пришёл с сайта: подсказка зависит от того, жива ли его личная подписка
+        trial_result = await session.execute(
+            select(WebTrial.ends_at).where(WebTrial.tg_id == tg_user).order_by(WebTrial.id.desc()).limit(1))
+        trial_ends = trial_result.scalar_one_or_none()
+        hint = web_trial_hint_text(user, trial_ends, datetime.utcnow(), len(SERVERS)) if trial_ends else ""
 
     text = 'Соглашение принято! Добро пожаловать в Главное меню MirkaProtected!\n\n'
-    if came_from_site:
-        text += web_trial_hint.format(count=len(SERVERS))
+    if hint:
+        text += hint
 
     await callback.answer('Соглашение принято!')
     await callback.message.edit_text(text, reply_markup=main_menu)

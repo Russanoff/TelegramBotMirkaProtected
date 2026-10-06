@@ -12,7 +12,7 @@ from sqlalchemy import select, func
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
-from app.bot.texts.web_trial import web_trial_hint
+from app.bot.texts.web_trial import web_trial_hint_text
 from datetime import timedelta, datetime
 
 
@@ -28,6 +28,7 @@ async def start_func(message: Message, command: CommandObject):
     web_token = None
     web_referrer = None
     web_bound = False
+    web_trial_ends = None
     if ref_payload and ref_payload.startswith("web_"):
         web_token = ref_payload[len("web_"):]
         ref_payload = None
@@ -42,6 +43,7 @@ async def start_func(message: Message, command: CommandObject):
                 trial.tg_id = tg_id
                 web_referrer = trial.referrer_id
                 web_bound = True
+                web_trial_ends = trial.ends_at
                 await session.commit()
 
         result = await session.execute(select(User).where(User.tg_id == tg_id))
@@ -86,4 +88,6 @@ async def start_func(message: Message, command: CommandObject):
 
             # Условия уже приняты раньше, значит ссылка с сайта расширяется сразу
             if web_bound:
-                await message.answer(web_trial_hint.format(count=len(SERVERS)))
+                hint = web_trial_hint_text(user, web_trial_ends, now, len(SERVERS))
+                if hint:
+                    await message.answer(hint)

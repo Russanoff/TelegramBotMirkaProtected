@@ -143,5 +143,12 @@ class XUI:
 
                     return True
 
+    async def update_inbound(self, inbound: dict) -> dict:
+        """Записывает inbound целиком (объект в том же виде, что отдаёт /inbounds/list)."""
+        payload = {k: v for k, v in inbound.items() if k != "clientStats"}
+        r = await self.client.post(f"/panel/api/inbounds/update/{inbound['id']}", json=payload)
+        r.raise_for_status()
+        return r.json()
+
     async def close(self):
         await self.client.aclose()

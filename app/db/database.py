@@ -30,6 +30,8 @@ def _add_missing_columns(sync_conn):
         sync_conn.execute(text("ALTER TABLE users ADD COLUMN referrer_id INTEGER"))
     if "referral_bonus_granted" not in existing:
         sync_conn.execute(text("ALTER TABLE users ADD COLUMN referral_bonus_granted BOOLEAN DEFAULT 0"))
+    if "last_winback_at" not in existing:
+        sync_conn.execute(text("ALTER TABLE users ADD COLUMN last_winback_at DATETIME"))
 
 
 async def init_db():

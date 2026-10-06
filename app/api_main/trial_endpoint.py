@@ -178,10 +178,13 @@ async def trial_subscription(token: str):
 
         # Гость открыл бота и принял условия: эта же ссылка становится его личной
         # подпиской (все локации, срок из бота), второй раз ничего добавлять не нужно.
+        # Только если личная подписка жива (или ещё не начиналась): у вернувшегося
+        # пользователя с истёкшей подпиской подмена оставила бы его без работающего доступа,
+        # поэтому ему до конца 48 часов отдаётся веб-триал.
         if trial.tg_id:
             user = (await session.execute(
                 select(User).where(User.tg_id == trial.tg_id))).scalar_one_or_none()
-            if user and user.accepted_terms:
+            if user and user.accepted_terms and (user.ends_at is None or user.ends_at > now):
                 user_token = user.token
             else:
                 user_token = None
