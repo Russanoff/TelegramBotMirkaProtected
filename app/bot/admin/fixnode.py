@@ -39,7 +39,8 @@ async def fixnode_preview(message: Message, command: CommandObject):
         f"{info['name']}\n"
         f"Сейчас: uTLS {info['old_fingerprint']}, Service Name {info['old_service_name_len']} симв., "
         f"Short IDs {info['old_short_ids']}, клиентов {info['clients']}.\n\n"
-        "Будет заменено: Service Name, uTLS (на другой), Short IDs, публичный и приватный ключи. "
+        "Будет заменено: Service Name (вида Get_api_Service), uTLS (на другой), Short IDs, "
+        "публичный и приватный ключи. "
         "Перед записью сохраню бэкап, после записи проверю, что клиенты на месте, иначе откачу.\n\n"
         "Подключённые клиенты отвалятся, пока не обновят подписку в приложении.",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
@@ -72,6 +73,7 @@ async def fixnode_apply(callback: CallbackQuery):
         await callback.message.answer(
             f"✅ {r['name']}: параметры заменены, клиентов {r['clients']} на месте.\n"
             f"uTLS: {r['old_fingerprint']} -> {r['new_fingerprint']}\n"
+            f"Service Name: {r['new_service_name']}\n"
             f"Бэкап: {r['backup']}\n\nТеперь обновите подписку в приложении и проверьте пинг.")
     elif r.get("rolled_back"):
         await callback.message.answer(f"⚠️ {key}: проверка после записи не прошла, прежние настройки возвращены.")
