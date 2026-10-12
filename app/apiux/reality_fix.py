@@ -10,7 +10,6 @@ import json
 import logging
 import os
 import secrets
-import string
 from datetime import datetime
 from pathlib import Path
 
@@ -22,6 +21,11 @@ logger = logging.getLogger(__name__)
 # популярные отпечатки из списка uTLS панели; редкие (360, qq) не берём
 FINGERPRINTS = ("chrome", "firefox", "safari", "ios", "android", "edge")
 BACKUP_DIR = Path(__file__).resolve().parents[2] / "backups" / "reality"
+
+# Service Name вида Get_api_Service: <Глагол>_<существительное>_Service
+SERVICE_VERBS = ("Get", "Set", "List", "Sync", "Fetch", "Update", "Check", "Push", "Pull", "Load", "Send", "Read")
+SERVICE_NOUNS = ("api", "data", "user", "config", "item", "event", "file", "stats", "order", "token",
+                 "session", "profile", "message", "report")
 
 _locks: dict[str, asyncio.Lock] = {}
 
@@ -95,9 +99,12 @@ def random_short_ids() -> list[str]:
     return [secrets.token_hex(n // 2) for n in lengths]
 
 
-def random_service_name() -> str:
-    alphabet = string.ascii_lowercase + string.digits
-    return "".join(secrets.choice(alphabet) for _ in range(12 + secrets.randbelow(5)))
+def random_service_name(exclude: str | None = None) -> str:
+    """Имя в виде настоящего gRPC-сервиса: Get_api_Service. Не равно прежнему имени узла."""
+    while True:
+        name = f"{secrets.choice(SERVICE_VERBS)}_{secrets.choice(SERVICE_NOUNS)}_Service"
+        if name != exclude:
+            return name
 
 
 def _snapshot(stream: dict) -> dict:
@@ -165,7 +172,7 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI) 
             private, public = generate_keypair()
             new_fp = secrets.choice([f for f in FINGERPRINTS if f != before["fingerprint"]])
             new_stream = json.loads(inbound["streamSettings"])
-            new_stream.setdefault("grpcSettings", {})["serviceName"] = random_service_name()
+            new_stream.setdefault("grpcSettings", {})["serviceName"] = random_service_name(before["serviceName"])
             reality = new_stream.setdefault("realitySettings", {})
             reality["privateKey"] = private
             reality["shortIds"] = random_short_ids()
@@ -175,6 +182,8 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI) 
 
             summary["backup"] = _write_backup(server_key, inbound)
             summary["new_fingerprint"] = new_fp
+            # имя сервиса не секрет: оно и так есть в каждой клиентской ссылке
+            summary["new_service_name"] = expected["serviceName"]
 
             payload = dict(inbound)
             payload["streamSettings"] = json.dumps(new_stream, indent=2)
