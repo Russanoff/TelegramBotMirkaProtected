@@ -39,6 +39,8 @@ async def grant_referral_bonus(session: AsyncSession, user: User, bot=None) -> N
 
     subs_res = await session.execute(select(Subscription).where(Subscription.user_id == referrer.tg_id))
     for sub in subs_res.scalars().all():
+        if sub.server_name not in SERVERS:
+            continue
         try:
             server = SERVERS[sub.server_name]
             xui = XUI(server)

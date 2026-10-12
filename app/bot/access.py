@@ -30,6 +30,9 @@ async def extend_user_access(session: AsyncSession, user: User, days: int, bot=N
 
     subs_res = await session.execute(select(Subscription).where(Subscription.user_id == user.tg_id))
     for sub in subs_res.scalars().all():
+        if sub.server_name not in SERVERS:
+            # узел удалён из конфигурации (запись в БД осталась): ходить некуда
+            continue
         try:
             server = SERVERS[sub.server_name]
             xui = XUI(server)

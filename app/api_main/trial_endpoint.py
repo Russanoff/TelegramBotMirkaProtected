@@ -97,7 +97,8 @@ def _payload(trial: WebTrial) -> dict:
 
 @trial_router.get("/", response_class=HTMLResponse)
 async def landing():
-    return HTMLResponse((WEB_DIR / "trial.html").read_text(encoding="utf-8"))
+    page = (WEB_DIR / "trial.html").read_text(encoding="utf-8")
+    return HTMLResponse(page.replace("__NODES__", str(len(SERVERS))))
 
 
 @trial_router.get("/static/{name}")
@@ -153,6 +154,8 @@ async def create_trial(request: Request):
 
 
 async def _links_for(server_name: str, sub_id: str) -> list[str]:
+    if server_name not in SERVERS:
+        return []  # старые триалы могут помнить узел, который уже удалён
     xui = XUI(SERVERS[server_name])
     try:
         async def _do():

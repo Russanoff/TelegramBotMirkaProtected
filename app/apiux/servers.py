@@ -55,14 +55,4 @@ SERVERS = {
         "host": "usa.mirkaprotected.ru"
     },
 
-    "FR": {
-        "name": "🇫🇷France",
-        "panel_url": "https://france.mirkaprotected.ru:3454/sXFYWBt0HpR7cpxvlR/",
-        "username": os.getenv('ADMIN'),
-        "password": os.getenv('PASSWORD'),
-        "remark": "France",
-        "sub_base": "https://france.mirkaprotected.ru:2096/subSccCribBE/",
-        "host": "france.mirkaprotected.ru"
-    },
-
 }

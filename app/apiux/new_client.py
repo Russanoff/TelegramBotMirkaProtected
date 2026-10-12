@@ -18,7 +18,9 @@ class XUI:
         self.client = httpx.AsyncClient(
             base_url=self.panel_url,
             verify=False,
-            timeout=155
+            # на чтение оставляем прежние 155 с, но недоступный узел должен отваливаться за 8 с,
+            # иначе одна мёртвая панель задерживает выдачу подписки и обработку оплаты на ~2 минуты
+            timeout=httpx.Timeout(155, connect=8)
         )
 
     async def login(self):
