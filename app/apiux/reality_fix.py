@@ -9,7 +9,11 @@ import base64
 import json
 import logging
 import os
+import re
 import secrets
+import socket
+import ssl
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -21,6 +25,18 @@ logger = logging.getLogger(__name__)
 # популярные отпечатки из списка uTLS панели; редкие (360, qq) не берём
 FINGERPRINTS = ("chrome", "firefox", "safari", "ios", "android", "edge")
 BACKUP_DIR = Path(__file__).resolve().parents[2] / "backups" / "reality"
+
+# Кандидаты в SNI/dest для Reality. Проверено 2026-10-15: TLS 1.3 + HTTP/2 + валидный сертификат
+# (с сервера бота) и открываются из Москвы и Петербурга (check-host.net). Список со временем устаревает,
+# поэтому перед записью домен проверяется заново (probe_sni). microsoft.com и amd.com из РФ не открываются,
+# sap/siemens/ikea/dell/bosch отвечают 403 на российские адреса - их здесь нет.
+SNI_CANDIDATES = (
+    "www.samsung.com", "www.apple.com", "www.ibm.com", "www.cisco.com", "www.intel.com", "www.nvidia.com",
+    "www.mastercard.com", "www.booking.com", "ubuntu.com", "www.kernel.org", "www.adobe.com", "www.philips.com",
+    "www.logitech.com", "www.paypal.com", "www.asus.com", "www.lenovo.com", "www.spotify.com", "www.mozilla.org",
+    "www.python.org", "www.debian.org", "www.oracle.com", "www.twitch.tv",
+)
+_DOMAIN_RE = re.compile(r"^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$")
 
 # Service Name вида Get_api_Service: <Глагол>_<существительное>_Service
 SERVICE_VERBS = ("Get", "Set", "List", "Sync", "Fetch", "Update", "Check", "Push", "Pull", "Load", "Send", "Read")
@@ -107,6 +123,32 @@ def random_service_name(exclude: str | None = None) -> str:
             return name
 
 
+def probe_sni(domain: str) -> dict:
+    """Живая проверка домена: TCP 443, TLS 1.3, HTTP/2, сертификат валиден для этого имени."""
+    try:
+        t0 = time.time()
+        raw = socket.create_connection((domain, 443), timeout=6)
+        ctx = ssl.create_default_context()
+        ctx.set_alpn_protocols(["h2", "http/1.1"])
+        tls = ctx.wrap_socket(raw, server_hostname=domain)
+        version, alpn = tls.version(), tls.selected_alpn_protocol()
+        tls.close()
+        ms = int((time.time() - t0) * 1000)
+    except Exception as e:
+        return {"ok": False, "detail": f"{type(e).__name__}: {str(e)[:60]}"}
+    ok = version == "TLSv1.3" and alpn == "h2"
+    return {"ok": ok, "detail": f"{version}, {alpn}, {ms} мс"}
+
+
+def _set_dest(reality: dict, domain: str) -> None:
+    """Xray новых версий зовёт поле target, старых - dest: пишем в то, что есть в inbound."""
+    value = f"{domain}:443"
+    keys = [k for k in ("dest", "target") if k in reality] or ["dest"]
+    for k in keys:
+        reality[k] = value
+    reality["serverNames"] = [domain]
+
+
 def _snapshot(stream: dict) -> dict:
     """Значения, которые меняет перенастройка (для проверки после записи)."""
     reality = stream.get("realitySettings", {})
@@ -116,6 +158,9 @@ def _snapshot(stream: dict) -> dict:
         "publicKey": reality.get("settings", {}).get("publicKey"),
         "privateKey": reality.get("privateKey"),
         "shortIds": reality.get("shortIds"),
+        "serverNames": reality.get("serverNames"),
+        "dest": reality.get("dest"),
+        "target": reality.get("target"),
     }
 
 
@@ -141,10 +186,21 @@ def _write_backup(server_key: str, inbound: dict) -> str:
     return str(path)
 
 
-async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI) -> dict:
-    """Без apply только описывает, что будет заменено. Секреты в результат не попадают."""
+async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI,
+                         rotate: bool = True, sni: str | None = None) -> dict:
+    """Без apply только описывает, что будет заменено. Секреты в результат не попадают.
+
+    rotate=True  - Service Name, uTLS, Short IDs, пара ключей (как раньше);
+    sni="домен"  - дополнительно (или при rotate=False - только это) меняет SNI и dest.
+    """
     if server_key not in SERVERS:
         raise RotationError(f"неизвестный узел {server_key}")
+    if sni is not None:
+        sni = sni.strip().lower()
+        if not _DOMAIN_RE.match(sni):
+            raise RotationError(f"«{sni}» не похоже на доменное имя")
+    if not rotate and sni is None:
+        raise RotationError("нечего менять: не указан ни SNI, ни ротация")
     lock = _locks.setdefault(server_key, asyncio.Lock())
     async with lock:
         server = SERVERS[server_key]
@@ -164,26 +220,39 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI) 
                 "old_fingerprint": before["fingerprint"],
                 "old_service_name_len": len(before["serviceName"] or ""),
                 "old_short_ids": len(before["shortIds"] or []),
+                "old_sni": (before["serverNames"] or [None])[0],
                 "applied": False,
             }
+            if sni is not None:
+                check = await asyncio.to_thread(probe_sni, sni)
+                summary["sni_check"] = check["detail"]
+                if not check["ok"]:
+                    raise RotationError(f"домен {sni} не подходит для SNI: {check['detail']}")
             if not apply:
                 return summary
 
-            private, public = generate_keypair()
-            new_fp = secrets.choice([f for f in FINGERPRINTS if f != before["fingerprint"]])
             new_stream = json.loads(inbound["streamSettings"])
-            new_stream.setdefault("grpcSettings", {})["serviceName"] = random_service_name(before["serviceName"])
-            reality = new_stream.setdefault("realitySettings", {})
-            reality["privateKey"] = private
-            reality["shortIds"] = random_short_ids()
-            reality.setdefault("settings", {})["publicKey"] = public
-            reality["settings"]["fingerprint"] = new_fp
+            new_fp = None
+            if rotate:
+                private, public = generate_keypair()
+                new_fp = secrets.choice([f for f in FINGERPRINTS if f != before["fingerprint"]])
+                new_stream.setdefault("grpcSettings", {})["serviceName"] = random_service_name(before["serviceName"])
+                reality = new_stream.setdefault("realitySettings", {})
+                reality["privateKey"] = private
+                reality["shortIds"] = random_short_ids()
+                reality.setdefault("settings", {})["publicKey"] = public
+                reality["settings"]["fingerprint"] = new_fp
+            if sni is not None:
+                _set_dest(new_stream.setdefault("realitySettings", {}), sni)
             expected = _snapshot(new_stream)
 
             summary["backup"] = _write_backup(server_key, inbound)
-            summary["new_fingerprint"] = new_fp
-            # имя сервиса не секрет: оно и так есть в каждой клиентской ссылке
-            summary["new_service_name"] = expected["serviceName"]
+            if rotate:
+                summary["new_fingerprint"] = new_fp
+                # имя сервиса не секрет: оно и так есть в каждой клиентской ссылке
+                summary["new_service_name"] = expected["serviceName"]
+            if sni is not None:
+                summary["new_sni"] = sni
 
             payload = dict(inbound)
             payload["streamSettings"] = json.dumps(new_stream, indent=2)
