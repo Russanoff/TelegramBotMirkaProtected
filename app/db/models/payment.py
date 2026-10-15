@@ -17,4 +17,4 @@ class Payment(Base):
     provider: Mapped[str] = mapped_column(String(50))
     status: Mapped[str] = mapped_column(String(20))
     payment_id: Mapped[str] = mapped_column(String(60))
-    create_payment: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow())
+    create_payment: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

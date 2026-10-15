@@ -45,6 +45,73 @@ async def _read_nodes() -> dict:
     return {k: v for k, v in await asyncio.gather(*(one(k) for k in SERVERS)) if v}
 
 
+class NodeActionError(Exception):
+    """Готовое сообщение для админа: предпросмотр построить не удалось."""
+
+
+async def build_fixnode_preview(key: str, domain: str | None = None):
+    """(текст, клавиатура) предпросмотра полной перенастройки узла (+ смена SNI, если указан домен)."""
+    if key not in SERVERS:
+        raise NodeActionError(f"Неизвестный узел.\n\n{_nodes_list()}")
+    if domain and len(domain) > _MAX_DOMAIN_LEN:
+        raise NodeActionError("Слишком длинное имя домена.")
+    try:
+        info = await rotate_reality(key, apply=False, sni=domain)
+    except Exception as e:
+        logger.exception("fixnode: не удалось прочитать узел %s", key)
+        raise NodeActionError(f"Не удалось подготовить узел {key}: {e}")
+    sni_line = (f"\nSNI: {info['old_sni']} -> {domain} (проверка: {info['sni_check']})" if domain else
+                f"\nSNI останется {info['old_sni']} (чтобы сменить, укажите домен: /fixnode {key} www.samsung.com)")
+    text = (
+        f"{info['name']}\n"
+        f"Сейчас: uTLS {info['old_fingerprint']}, Service Name {info['old_service_name_len']} симв., "
+        f"Short IDs {info['old_short_ids']}, клиентов {info['clients']}.{sni_line}\n\n"
+        "Будет заменено: Service Name (вида Get_api_Service), uTLS (на другой), Short IDs, "
+        "публичный и приватный ключи. "
+        "Перед записью сохраню бэкап, после записи проверю, что клиенты на месте, иначе откачу.\n\n"
+        "Подключённые клиенты отвалятся, пока не обновят подписку в приложении.")
+    return text, _buttons(f"fixnode_apply:{key}" + (f":{domain}" if domain else ""))
+
+
+async def build_fixsni_preview(key: str, domain: str = "auto"):
+    """(текст, клавиатура) предпросмотра смены только SNI. domain="auto" - подобрать из кандидатов."""
+    if key not in SERVERS:
+        raise NodeActionError(f"Неизвестный узел.\n\n{_nodes_list()}")
+    domain = domain.lower()
+    if domain != "auto" and len(domain) > _MAX_DOMAIN_LEN:
+        raise NodeActionError("Слишком длинное имя домена.")
+    info = None
+    try:
+        if domain == "auto":
+            used = {v["old_sni"] for v in (await _read_nodes()).values()}
+            pool = [d for d in SNI_CANDIDATES if d not in used] or list(SNI_CANDIDATES)
+            secrets.SystemRandom().shuffle(pool)
+            for candidate in pool[:8]:  # домен из списка мог временно не пройти проверку: берём следующий
+                try:
+                    info = await rotate_reality(key, apply=False, rotate=False, sni=candidate)
+                    domain = candidate
+                    break
+                except RotationError:
+                    continue
+            if info is None:
+                raise NodeActionError("Не нашёл подходящий домен: ни один из проверенных кандидатов сейчас не прошёл проверку TLS.")
+        else:
+            info = await rotate_reality(key, apply=False, rotate=False, sni=domain)
+    except NodeActionError:
+        raise
+    except Exception as e:
+        raise NodeActionError(f"Не получилось: {e}")
+    text = (
+        f"{info['name']}\n"
+        f"SNI: {info['old_sni']} -> {domain}\n"
+        f"Проверка домена: {info['sni_check']}\n"
+        f"Клиентов на узле: {info['clients']}\n\n"
+        "Изменятся только SNI и dest. Ключи, Short IDs, Service Name и uTLS остаются прежними. "
+        "Перед записью сохраню бэкап, после проверю клиентов, при расхождении откачу.\n\n"
+        "Подключённые клиенты отвалятся, пока не обновят подписку (приложение делает это раз в час).")
+    return text, _buttons(f"fixsni_apply:{key}:{domain}")
+
+
 @fixnode_router.message(Command("fixnode"))
 async def fixnode_preview(message: Message, command: CommandObject):
     if not _is_admin(message.from_user.id):
@@ -55,26 +122,12 @@ async def fixnode_preview(message: Message, command: CommandObject):
     if key not in SERVERS:
         await message.answer(f"Укажите узел: /fixnode GE или /fixnode GE www.samsung.com (с новым SNI)\n\n{_nodes_list()}")
         return
-    if domain and len(domain) > _MAX_DOMAIN_LEN:
-        await message.answer("Слишком длинное имя домена.")
-        return
     try:
-        info = await rotate_reality(key, apply=False, sni=domain)
-    except Exception as e:
-        logger.exception("fixnode: не удалось прочитать узел %s", key)
-        await message.answer(f"Не удалось подготовить узел {key}: {e}")
+        text, markup = await build_fixnode_preview(key, domain)
+    except NodeActionError as e:
+        await message.answer(str(e))
         return
-    sni_line = (f"\nSNI: {info['old_sni']} -> {domain} (проверка: {info['sni_check']})" if domain else
-                f"\nSNI останется {info['old_sni']} (чтобы сменить, укажите домен: /fixnode {key} www.samsung.com)")
-    await message.answer(
-        f"{info['name']}\n"
-        f"Сейчас: uTLS {info['old_fingerprint']}, Service Name {info['old_service_name_len']} симв., "
-        f"Short IDs {info['old_short_ids']}, клиентов {info['clients']}.{sni_line}\n\n"
-        "Будет заменено: Service Name (вида Get_api_Service), uTLS (на другой), Short IDs, "
-        "публичный и приватный ключи. "
-        "Перед записью сохраню бэкап, после записи проверю, что клиенты на месте, иначе откачу.\n\n"
-        "Подключённые клиенты отвалятся, пока не обновят подписку в приложении.",
-        reply_markup=_buttons(f"fixnode_apply:{key}" + (f":{domain}" if domain else "")))
+    await message.answer(text, reply_markup=markup)
 
 
 @fixnode_router.message(Command("fixsni"))
@@ -92,43 +145,12 @@ async def fixsni_preview(message: Message, command: CommandObject):
             "Проверенные кандидаты (TLS 1.3 + HTTP/2, открываются из РФ):\n" + ", ".join(SNI_CANDIDATES))
         return
     key = parts[0].upper()
-    if key not in SERVERS:
-        await message.answer(f"Неизвестный узел.\n\n{_nodes_list()}")
-        return
-    domain = parts[1].lower() if len(parts) > 1 else "auto"
-    if domain != "auto" and len(domain) > _MAX_DOMAIN_LEN:
-        await message.answer("Слишком длинное имя домена.")
-        return
-    info = None
     try:
-        if domain == "auto":
-            used = {v["old_sni"] for v in (await _read_nodes()).values()}
-            pool = [d for d in SNI_CANDIDATES if d not in used] or list(SNI_CANDIDATES)
-            secrets.SystemRandom().shuffle(pool)
-            for candidate in pool[:8]:  # домен из списка мог временно не пройти проверку: берём следующий
-                try:
-                    info = await rotate_reality(key, apply=False, rotate=False, sni=candidate)
-                    domain = candidate
-                    break
-                except RotationError:
-                    continue
-            if info is None:
-                await message.answer("Не нашёл подходящий домен: ни один из проверенных кандидатов сейчас не прошёл проверку TLS.")
-                return
-        else:
-            info = await rotate_reality(key, apply=False, rotate=False, sni=domain)
-    except Exception as e:
-        await message.answer(f"Не получилось: {e}")
+        text, markup = await build_fixsni_preview(key, parts[1] if len(parts) > 1 else "auto")
+    except NodeActionError as e:
+        await message.answer(str(e))
         return
-    await message.answer(
-        f"{info['name']}\n"
-        f"SNI: {info['old_sni']} -> {domain}\n"
-        f"Проверка домена: {info['sni_check']}\n"
-        f"Клиентов на узле: {info['clients']}\n\n"
-        "Изменятся только SNI и dest. Ключи, Short IDs, Service Name и uTLS остаются прежними. "
-        "Перед записью сохраню бэкап, после проверю клиентов, при расхождении откачу.\n\n"
-        "Подключённые клиенты отвалятся, пока не обновят подписку (приложение делает это раз в час).",
-        reply_markup=_buttons(f"fixsni_apply:{key}:{domain}"))
+    await message.answer(text, reply_markup=markup)
 
 
 async def _apply_and_report(callback: CallbackQuery, key: str, rotate: bool, sni: str | None) -> None:

@@ -13,7 +13,7 @@ from app.bot.referral import grant_referral_bonus
 logger = logging.getLogger(__name__)
 
 
-async def extend_user_access(session: AsyncSession, user: User, days: int, bot=None) -> None:
+async def extend_user_access(session: AsyncSession, user: User, days: int, bot=None, grant_bonus: bool = True) -> None:
     """Продлевает user.ends_at на days, обновляет expiry на всех уже выданных
     VPN-клиентах и начисляет реферальный бонус пригласившему (если применимо).
 
@@ -45,4 +45,5 @@ async def extend_user_access(session: AsyncSession, user: User, days: int, bot=N
                 sub.server_name, user.tg_id,
             )
 
-    await grant_referral_bonus(session, user, bot=bot)
+    if grant_bonus:  # ручное продление админом не считается оплатой приглашённого
+        await grant_referral_bonus(session, user, bot=bot)

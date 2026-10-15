@@ -17,6 +17,7 @@ from app.bot.admin.referral_stats import referral_stats_router
 from app.bot.admin.winback import winback_router
 from app.bot.admin.fixnode import fixnode_router
 from app.bot.admin.errors import errors_router
+from app.bot.admin.menu import admin_menu_router, setup_admin_commands
 from app.bot.admin.pay_reconcile import payment_reconciler
 from dotenv import load_dotenv
 import os
@@ -29,7 +30,9 @@ dp = Dispatcher()
 
 async def main():
     await init_db()
+    await setup_admin_commands(bot)
     dp.include_router(errors_router)
+    dp.include_router(admin_menu_router)
     dp.include_router(router_admin)
     dp.include_router(pay_call)
     dp.include_router(stars_router)

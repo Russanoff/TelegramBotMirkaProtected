@@ -152,5 +152,23 @@ class XUI:
         r.raise_for_status()
         return r.json()
 
+    async def _read(self, path: str):
+        """Читающий вызов панели: в разных версиях это GET или POST. Возвращает obj или None."""
+        for method in (self.client.get, self.client.post):
+            try:
+                r = await method(path)
+                j = r.json()
+                if j.get("success"):
+                    return j.get("obj")
+            except Exception:
+                continue
+        return None
+
+    async def server_status(self):
+        return await self._read("/panel/api/server/status")
+
+    async def online_clients(self):
+        return await self._read("/panel/api/inbounds/onlines")
+
     async def close(self):
         await self.client.aclose()

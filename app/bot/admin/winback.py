@@ -80,22 +80,23 @@ async def run_winback(bot) -> tuple[int, int, int]:
     return sent, blocked, failed
 
 
+async def build_winback_preview():
+    """(текст, клавиатура | None). Клавиатуры нет, если отправлять некому."""
+    async with AsyncSessionLocal() as session:
+        users = await find_winback_users(session)
+    if not users:
+        return ("Подходящих пользователей нет: либо подписки истекли недавно, "
+                "либо сообщение уже отправлялось."), None
+    return (f"Получат сообщение: {len(users)} (подписка истекла больше {WINBACK_AFTER_DAYS} дней назад, "
+            f"раньше не отправлялось).\n\nТекст:\n\n{WINBACK_TEXT}"), _confirm_menu
+
+
 @winback_router.message(Command("winback"))
 async def winback_preview(message: Message):
     if not _is_admin(message.from_user.id):
         return
-    async with AsyncSessionLocal() as session:
-        users = await find_winback_users(session)
-    if not users:
-        await message.answer("Подходящих пользователей нет: либо подписки истекли недавно, "
-                             "либо сообщение уже отправлялось.")
-        return
-    await message.answer(
-        f"Получат сообщение: {len(users)} (подписка истекла больше {WINBACK_AFTER_DAYS} дней назад, "
-        f"раньше не отправлялось).\n\nТекст:\n\n{WINBACK_TEXT}",
-        reply_markup=_confirm_menu,
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
-    )
+    text, markup = await build_winback_preview()
+    await message.answer(text, reply_markup=markup, link_preview_options=LinkPreviewOptions(is_disabled=True))
 
 
 @winback_router.callback_query(F.data == "winback_send")

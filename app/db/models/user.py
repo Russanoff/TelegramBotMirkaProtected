@@ -14,7 +14,7 @@ class User(Base):
     accepted_terms: Mapped[bool] = mapped_column(Boolean, default=False)
     ends_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
-    create_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow())
+    create_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     token: Mapped[str] = mapped_column(String(260), default=False)
     referrer_id: Mapped[int] = mapped_column(BigInteger, nullable=True)
     referral_bonus_granted: Mapped[bool] = mapped_column(Boolean, default=False)
