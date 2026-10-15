@@ -13,7 +13,7 @@ from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 from app.bot.texts.web_trial import web_trial_hint_text
-from app.bot.admin.notify import notify_admin
+from app.bot.admin.notify import notify_admin_background
 from datetime import timedelta, datetime
 
 
@@ -82,7 +82,7 @@ async def start_func(message: Message, command: CommandObject):
             else:
                 source = "напрямую"
             fu = message.from_user
-            await notify_admin(
+            notify_admin_background(
                 f"🆕 Новый клиент\n"
                 f"ID: {tg_id}\n"
                 f"Имя: {fu.full_name}" + (f" (@{fu.username})" if fu.username else "") + "\n"

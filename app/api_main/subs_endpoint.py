@@ -27,7 +27,7 @@ subs_router = APIRouter()
 
 PROFILE_TITLE = "MirkaProtected"
 SUPPORT_URL = "https://t.me/rsfromen"
-UPDATE_INTERVAL_HOURS = 1  # как часто приложение само обновляет подписку (после смены конфигов узлов)
+UPDATE_INTERVAL_HOURS = 3  # как часто приложение само обновляет подписку (после смены конфигов узлов)
 
 
 def subscription_headers(ends_at: datetime.datetime) -> dict:

@@ -30,7 +30,6 @@ dp = Dispatcher()
 
 async def main():
     await init_db()
-    await setup_admin_commands(bot)
     dp.include_router(errors_router)
     dp.include_router(admin_menu_router)
     dp.include_router(router_admin)
@@ -46,6 +45,7 @@ async def main():
     dp.include_router(referral_stats_router)
     dp.include_router(winback_router)
     dp.include_router(fixnode_router)
+    asyncio.create_task(setup_admin_commands(bot))  # не задерживает старт, если Telegram отвечает медленно
     asyncio.create_task(checker_bot(bot))
     asyncio.create_task(payment_reconciler(bot))
     await dp.start_polling(bot)

@@ -38,6 +38,8 @@ PROCESS_STARTED = time.time()
 REPO_DIR = Path(__file__).resolve().parents[3]
 NO_PREVIEW = LinkPreviewOptions(is_disabled=True)
 MANUAL_EXTEND_DAYS = (7, 30)
+INPUT_TTL = 900            # сек: режим ввода (рассылка, поиск) сам заканчивается
+MAX_BROADCAST_LEN = 4000   # лимит Telegram 4096
 BROADCAST_PAUSE = 0.05  # сек между сообщениями (лимит Telegram - 30 в секунду)
 _broadcast_lock = asyncio.Lock()
 
@@ -317,23 +319,33 @@ async def winback_menu_callback(callback: CallbackQuery):
     await _show(callback, text, markup or _back("adm:mail", "⬅️ К рассылкам"))
 
 
+def _expired(data: dict) -> bool:
+    return time.time() - data.get("started", 0) > INPUT_TTL
+
+
 @admin_menu_router.callback_query(F.data == "adm:bc")
 async def broadcast_start_callback(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AdminStates.broadcast_text)
+    await state.update_data(started=time.time())
     await _show(callback, "📢 Пришлите текст рассылки одним сообщением. Его получат все пользователи бота.\n"
                           "Перед отправкой я покажу, сколько человек получат, и попрошу подтвердить.\nОтмена: /cancel",
                 _back("adm:mail", "❌ Отмена"))
 
 
-@admin_menu_router.message(StateFilter(AdminStates.broadcast_text), F.text)
+# команды (/fixnode, /winback ...) в режиме ввода не перехватываются: они работают как обычно
+@admin_menu_router.message(StateFilter(AdminStates.broadcast_text), F.text, ~F.text.startswith("/"))
 async def broadcast_text_received(message: Message, state: FSMContext):
     text = message.text
-    if text.startswith("/"):
-        await message.answer("Пришлите обычный текст (не команду). Отмена: /cancel")
+    if _expired(await state.get_data()):
+        await state.clear()
+        await message.answer("Время ввода истекло. Откройте /admin заново.")
+        return
+    if len(text) > MAX_BROADCAST_LEN:
+        await message.answer(f"Текст слишком длинный: {len(text)} из {MAX_BROADCAST_LEN} символов. Сократите и пришлите снова.")
         return
     async with AsyncSessionLocal() as s:
         count = (await s.execute(select(func.count(User.id)))).scalar()
-    await state.update_data(text=text)
+    await state.update_data(text=text, started=time.time())
     await message.answer(f"Получат: {count} пользователей (все, кто есть в базе).\n\nТекст:\n\n{text[:1500]}",
                          reply_markup=_kb([_btn("✅ Отправить", "adm:bc_send"), _btn("❌ Отмена", "adm:bc_cancel")]),
                          link_preview_options=NO_PREVIEW)
@@ -368,6 +380,8 @@ async def broadcast_send_callback(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     text = data.get("text")
     await state.clear()
+    if not text or _expired(data):
+        text = None
     if not text:
         await _show(callback, "Текст рассылки потерян (бот перезапускался?). Начните заново.", _back("adm:mail", "⬅️ К рассылкам"))
         return
@@ -402,6 +416,7 @@ async def clients_recent_callback(callback: CallbackQuery):
 @admin_menu_router.callback_query(F.data == "adm:cl_find")
 async def clients_find_callback(callback: CallbackQuery, state: FSMContext):
     await state.set_state(AdminStates.find_user)
+    await state.update_data(started=time.time())
     await _show(callback, "🔎 Пришлите Telegram ID клиента (число). Отмена: /cancel", _back("adm:cl", "❌ Отмена"))
 
 
@@ -436,8 +451,12 @@ async def client_card_callback(callback: CallbackQuery):
     await _show(callback, *card)
 
 
-@admin_menu_router.message(StateFilter(AdminStates.find_user), F.text)
+@admin_menu_router.message(StateFilter(AdminStates.find_user), F.text, ~F.text.startswith("/"))
 async def client_find_received(message: Message, state: FSMContext):
+    if _expired(await state.get_data()):
+        await state.clear()
+        await message.answer("Время ввода истекло. Откройте /admin заново.")
+        return
     raw = message.text.strip()
     if not raw.isdigit():
         await message.answer("Нужен числовой Telegram ID. Отмена: /cancel")

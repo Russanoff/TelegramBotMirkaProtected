@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from aiogram.exceptions import TelegramForbiddenError
 from sqlalchemy import select
 
 from app.bot.inline_menu.main_menu import main_menu
@@ -44,11 +45,20 @@ async def send_reminder(bot, session, days_ahead: int):
     text = REMINDER_TEXTS[days_ahead]
 
     for user in users:
+        # одно напоминание на (порог, дата окончания): перезапуск бота не должен слать его повторно
+        key = f"{days_ahead}:{user.ends_at:%Y-%m-%d}"
+        if user.last_reminder == key:
+            continue
         try:
             await bot.send_message(chat_id=user.tg_id, text=text,
                                    parse_mode='Markdown', reply_markup=main_menu)
+            user.last_reminder = key
+        except TelegramForbiddenError:
+            user.last_reminder = key  # заблокировал бота: не пытаемся снова
         except Exception:
             logger.exception("Не удалось отправить напоминание пользователю %s", user.tg_id)
+            continue
+        await session.commit()
 
 
 async def checker_bot(bot):

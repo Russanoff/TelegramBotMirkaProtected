@@ -46,12 +46,27 @@ def _client_name(trial: WebTrial) -> str:
     return f"WEB_{trial.token[:10]}"
 
 
+def _existing_sub_id(inbounds: dict, remark: str, email: str) -> str | None:
+    for inbound in inbounds.get("obj", []):
+        if inbound.get("remark") != remark:
+            continue
+        for client in json.loads(inbound.get("settings") or "{}").get("clients", []):
+            if client.get("email") == email:
+                return client.get("subId")
+    return None
+
+
 async def _provision_one(server_name: str, trial: WebTrial):
     """Создаёт клиента на одной панели. Возвращает (server_name, sub_id | None)."""
     xui = XUI(SERVERS[server_name])
     try:
         async def _do():
             await xui.login()
+            # клиент мог быть создан в прошлый раз, но ответ панели не дошёл (таймаут): создавать дубль нельзя,
+            # 3x-ui отвергнет повторный email
+            existing = _existing_sub_id(await xui.get_inbounds(), SERVERS[server_name]["remark"], _client_name(trial))
+            if existing:
+                return existing
             link = await xui.create_link(
                 client_name=_client_name(trial), tg_id=0, ends_at=trial.ends_at)
             return link.split("/")[-1]

@@ -158,10 +158,15 @@ def _snapshot(stream: dict) -> dict:
         "publicKey": reality.get("settings", {}).get("publicKey"),
         "privateKey": reality.get("privateKey"),
         "shortIds": reality.get("shortIds"),
-        "serverNames": reality.get("serverNames"),
-        "dest": reality.get("dest"),
-        "target": reality.get("target"),
     }
+
+
+def _sni_snapshot(stream: dict) -> dict:
+    """SNI-поля сравниваются после записи только если SNI менялся: панель могла нормализовать
+    dest/target при сохранении, и обычная ротация не должна из-за этого откатываться."""
+    reality = stream.get("realitySettings", {})
+    # dest и target - одно и то же поле в разных версиях Xray: сравниваем значение, а не имя ключа
+    return {"serverNames": reality.get("serverNames"), "dest": reality.get("dest") or reality.get("target")}
 
 
 def _client_ids(inbound: dict) -> list[str]:
@@ -220,7 +225,7 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI,
                 "old_fingerprint": before["fingerprint"],
                 "old_service_name_len": len(before["serviceName"] or ""),
                 "old_short_ids": len(before["shortIds"] or []),
-                "old_sni": (before["serverNames"] or [None])[0],
+                "old_sni": (_sni_snapshot(stream)["serverNames"] or [None])[0],
                 "applied": False,
             }
             if sni is not None:
@@ -245,6 +250,7 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI,
             if sni is not None:
                 _set_dest(new_stream.setdefault("realitySettings", {}), sni)
             expected = _snapshot(new_stream)
+            expected_sni = _sni_snapshot(new_stream)
 
             summary["backup"] = _write_backup(server_key, inbound)
             if rotate:
@@ -264,6 +270,7 @@ async def rotate_reality(server_key: str, apply: bool = False, xui_factory=XUI,
             after = _find_inbound(await xui.get_inbounds(), server["remark"])
             ok = (
                 _snapshot(json.loads(after["streamSettings"])) == expected
+                and (sni is None or _sni_snapshot(json.loads(after["streamSettings"])) == expected_sni)
                 and _client_ids(after) == _client_ids(inbound)
                 and after["enable"]
             )

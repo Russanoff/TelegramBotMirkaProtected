@@ -20,3 +20,5 @@ class User(Base):
     referral_bonus_granted: Mapped[bool] = mapped_column(Boolean, default=False)
     # когда пользователю отправляли «вернитесь, оплатить можно через сайт»; NULL = не отправляли
     last_winback_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    # какое напоминание об окончании подписки уже отправлено, вида "3:2026-10-18" (порог:дата окончания)
+    last_reminder: Mapped[str] = mapped_column(String(24), nullable=True)

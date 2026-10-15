@@ -93,21 +93,25 @@ async def reconcile_once(bot) -> dict:
 
     stats = {"checked": len(pending), "canceled": 0, "succeeded": 0, "still_pending": 0, "errors": 0}
     for payment_id, yk_id in pending:
+        # каждый платёж изолирован: сбой одного (ЮKassa не ответила, строка пропала, БД занята)
+        # не должен останавливать обработку остальных, включая оплаченный с потерянным вебхуком
         try:
             real = await asyncio.to_thread(YooKassaPayment.find_one, yk_id)
-        except Exception:
+            if real.status == "canceled":
+                cd = getattr(real, "cancellation_details", None)
+                await _handle_canceled(bot, payment_id, getattr(cd, "reason", None) if cd else None)
+                stats["canceled"] += 1
+            elif real.status == "succeeded":
+                await _handle_succeeded(bot, payment_id)
+                stats["succeeded"] += 1
+            else:
+                stats["still_pending"] += 1
+        except Exception as e:
             stats["errors"] += 1
-            logger.exception("Сверка платежей: ЮKassa не ответила по платежу #%s", payment_id)
-            continue
-        if real.status == "canceled":
-            cd = getattr(real, "cancellation_details", None)
-            await _handle_canceled(bot, payment_id, getattr(cd, "reason", None) if cd else None)
-            stats["canceled"] += 1
-        elif real.status == "succeeded":
-            await _handle_succeeded(bot, payment_id)
-            stats["succeeded"] += 1
-        else:
-            stats["still_pending"] += 1
+            logger.exception("Сверка платежей: не удалось обработать платёж #%s", payment_id)
+            await notify_admin_throttled(f"reconcile:{payment_id}",
+                                         f"🚨 Сверка: не удалось обработать платёж #{payment_id}: {type(e).__name__}: {str(e)[:150]}",
+                                         bot=bot, window=3600)
     return stats
 
 
