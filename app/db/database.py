@@ -1,3 +1,5 @@
+import os
+
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -9,7 +11,8 @@ from app.db.models.web_trial import WebTrial
 
 DATABASE_URL = "sqlite+aiosqlite:///./database.db"
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+# SQL в журнал только для отладки (SQL_ECHO=1): иначе каждый запрос раздувает журнал и нагружает диск
+engine = create_async_engine(DATABASE_URL, echo=os.getenv("SQL_ECHO") == "1")
 
 AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
