@@ -147,7 +147,9 @@ async def stats_text() -> str:
         referred = (await count(User.referrer_id.isnot(None))).scalar()
         ref_paid = (await count(User.referral_bonus_granted == True)).scalar()  # noqa: E712
         payers = (await s.execute(select(func.count(func.distinct(Payment.user_id))).where(Payment.status == "succeeded"))).scalar()
-        pending = (await s.execute(select(func.count(Payment.id)).where(Payment.status == "pending"))).scalar()
+        fresh = now - timedelta(days=3)  # столько живёт платёж в сверке; старше - брошенный
+        pending = (await s.execute(select(func.count(Payment.id)).where(Payment.status == "pending", Payment.create_payment > fresh))).scalar()
+        abandoned = (await s.execute(select(func.count(Payment.id)).where(Payment.status == "pending", Payment.create_payment <= fresh))).scalar()
         all_time = await _money(s, None)
         week = await _money(s, now - timedelta(days=7))
         day = await _money(s, today)
@@ -158,7 +160,7 @@ async def stats_text() -> str:
             f"Оплаты сегодня: {day}\n"
             f"За 7 дней: {week}\n"
             f"За всё время: {all_time}\n"
-            f"Ожидают оплаты: {pending}\n\n"
+            f"Ожидают оплаты: {pending} (за последние 3 дня), брошенных раньше: {abandoned}\n\n"
             f"Рефералы: пришло {referred}, оплатили {ref_paid} (бонусных дней выдано: {ref_paid * REFERRAL_BONUS_DAYS})")
 
 
@@ -172,10 +174,11 @@ async def stats_callback(callback: CallbackQuery):
 async def payments_text() -> str:
     async with AsyncSessionLocal() as s:
         rows = (await s.execute(select(Payment).order_by(Payment.id.desc()).limit(10))).scalars().all()
-        pending = (await s.execute(select(func.count(Payment.id)).where(Payment.status == "pending"))).scalar()
+        pending = (await s.execute(select(func.count(Payment.id)).where(
+            Payment.status == "pending", Payment.create_payment > datetime.utcnow() - timedelta(days=3)))).scalar()
     lines = [f"{STATUS_ICONS.get(p.status, '❔')} #{p.id} {p.create_payment:%d.%m %H:%M} {PROVIDERS.get(p.provider, p.provider)} "
              f"{p.amount} {p.currency} · {p.days} дн. · {p.status} · клиент {p.user_id}" for p in rows]
-    return (f"💳 Последние платежи (время UTC), ожидают: {pending}\n\n" + ("\n".join(lines) or "Платежей пока нет") +
+    return (f"💳 Последние платежи (время UTC), ожидают оплаты за 3 дня: {pending}\n\n" + ("\n".join(lines) or "Платежей пока нет") +
             "\n\n«Сверить» спрашивает ЮKassa о платежах, которые висят в ожидании (бот делает это сам раз в 5 минут).")
 
 
