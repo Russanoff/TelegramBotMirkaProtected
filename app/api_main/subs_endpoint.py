@@ -23,6 +23,24 @@ logger = logging.getLogger(__name__)
 
 subs_router = APIRouter()
 
+PROFILE_TITLE = "MirkaProtected"
+SUPPORT_URL = "https://t.me/rsfromen"
+UPDATE_INTERVAL_HOURS = 1  # как часто приложение само обновляет подписку (после смены конфигов узлов)
+
+
+def subscription_headers(ends_at: datetime.datetime) -> dict:
+    """Заголовки, по которым Happ/Hiddify и др. показывают срок подписки и сами её обновляют.
+
+    ends_at - наивное время в UTC (так хранится в БД). total=0 - без лимита трафика.
+    """
+    expire = int(ends_at.replace(tzinfo=datetime.timezone.utc).timestamp())
+    return {
+        "Subscription-Userinfo": f"upload=0; download=0; total=0; expire={expire}",
+        "Profile-Title": PROFILE_TITLE,
+        "Profile-Update-Interval": str(UPDATE_INTERVAL_HOURS),
+        "Support-Url": SUPPORT_URL,
+    }
+
 
 def build_vless_links(inbounds: dict, sub_id: str, server_name: str) -> list[str]:
     """Собирает vless-ссылки клиента с данным sub_id из ответа панели (/inbounds/list)."""
@@ -156,4 +174,4 @@ async def get_subscription(token: str):
 
         encoded = base64.b64encode(result.encode()).decode()
 
-        return PlainTextResponse(encoded)
+        return PlainTextResponse(encoded, headers=subscription_headers(user.ends_at))

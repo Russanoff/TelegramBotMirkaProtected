@@ -1,3 +1,4 @@
+from app.bot.safe_edit import safe_edit_text
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from app.bot.inline_menu.main_menu import main_menu
@@ -16,7 +17,7 @@ config_callbacks = Router()
 @config_callbacks.callback_query(F.data == 'vpn_instruction')
 async def have_app_next(callback: CallbackQuery):
     await callback.answer('')
-    await callback.message.edit_text(text=f'{instruction}\n\n🥇Чат ПроВПН - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
+    await safe_edit_text(callback.message, text=f'{instruction}\n\n🥇Чат ПроВПН - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
                                      parse_mode='Markdown',
                                      reply_markup=main_menu)
 
@@ -33,9 +34,9 @@ async def back_to_main_menu(callback: CallbackQuery):
 
         if user.ends_at and user.ends_at > now:
             end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
+            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
                                  reply_markup=main_menu)
         elif user.ends_at and user.ends_at < now:
-            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
+            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
         elif not user.ends_at:
-            await callback.message.edit_text(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)
+            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)

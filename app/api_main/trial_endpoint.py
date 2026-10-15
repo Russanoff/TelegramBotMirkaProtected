@@ -7,10 +7,10 @@ import secrets
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from sqlalchemy import func, select
 
-from app.api_main.subs_endpoint import build_vless_links, get_subscription
+from app.api_main.subs_endpoint import build_vless_links, get_subscription, subscription_headers
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
 from app.db.database import AsyncSessionLocal
@@ -23,9 +23,9 @@ trial_router = APIRouter()
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 TRIAL_HOURS = 48
-# Триал с сайта даёт только эти локации (ключи SERVERS); остальные - в боте.
-# Польша - стабильная, США - для YouTube и Meta.
-TRIAL_SERVERS = ("PL", "USA")
+# Триал с сайта выдаётся сразу на все локации: часть узлов может не работать в конкретной
+# сети (мобильная или Wi-Fi), и гостю нужен хотя бы один рабочий.
+TRIAL_SERVERS = tuple(SERVERS)
 MAX_TRIALS_PER_IP = 2          # за окно IP_WINDOW_HOURS (за одним мобильным NAT сидят многие)
 IP_WINDOW_HOURS = 24
 PANEL_TIMEOUT = 25             # сек на одну панель, чтобы одна упавшая не вешала страницу
@@ -99,6 +99,21 @@ def _payload(trial: WebTrial) -> dict:
 async def landing():
     page = (WEB_DIR / "trial.html").read_text(encoding="utf-8")
     return HTMLResponse(page.replace("__NODES__", str(len(SERVERS))))
+
+
+@trial_router.get("/robots.txt")
+async def robots():
+    return PlainTextResponse(
+        f"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /t/\nSitemap: {PUBLIC_URL}/sitemap.xml\n")
+
+
+@trial_router.get("/sitemap.xml")
+async def sitemap():
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+           f'  <url><loc>{PUBLIC_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n'
+           '</urlset>\n')
+    return Response(xml, media_type="application/xml")
 
 
 @trial_router.get("/static/{name}")
@@ -194,6 +209,7 @@ async def trial_subscription(token: str):
         else:
             user_token = None
 
+        trial_ends = trial.ends_at
         if user_token is None:
             if trial.ends_at <= now:
                 raise HTTPException(status_code=410, detail="Trial expired")
@@ -205,4 +221,5 @@ async def trial_subscription(token: str):
 
     per_server = await asyncio.gather(*(_links_for(n, s) for n, s in sub_ids.items()))
     links = [link for chunk in per_server for link in chunk]
-    return PlainTextResponse(base64.b64encode("\n".join(links).encode()).decode())
+    return PlainTextResponse(base64.b64encode("\n".join(links).encode()).decode(),
+                             headers=subscription_headers(trial_ends))

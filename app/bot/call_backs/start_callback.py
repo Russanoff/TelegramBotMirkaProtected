@@ -1,3 +1,4 @@
+from app.bot.safe_edit import safe_edit_text
 from aiogram.filters.callback_data import CallbackQuery
 from app.bot.texts.agreement import agreement
 from aiogram import Router, F
@@ -18,7 +19,7 @@ start_menu_callback = Router()
 @start_menu_callback.callback_query(F.data == 'open_agreements')
 async def open_agreements(callback: CallbackQuery):
     await callback.answer('Пользовательское соглашение')
-    await callback.message.edit_text(f'{agreement}', reply_markup=confirm_menu)
+    await safe_edit_text(callback.message, f'{agreement}', reply_markup=confirm_menu)
 
 
 @start_menu_callback.callback_query(F.data == 'confirm')
@@ -45,4 +46,4 @@ async def open_main_menu(callback: CallbackQuery):
         text += hint
 
     await callback.answer('Соглашение принято!')
-    await callback.message.edit_text(text, reply_markup=main_menu)
+    await safe_edit_text(callback.message, text, reply_markup=main_menu)

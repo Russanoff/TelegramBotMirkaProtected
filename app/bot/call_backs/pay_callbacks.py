@@ -1,4 +1,5 @@
 
+from app.bot.safe_edit import safe_edit_text
 import asyncio
 import logging
 from aiogram import Router, F
@@ -63,7 +64,7 @@ async def access_days(callback: CallbackQuery):
     builder.add(InlineKeyboardButton(text='💳 Оплатить', url=payment_url))
     builder.add(InlineKeyboardButton(text="⬅ Назад", callback_data="Extend"))
 
-    await callback.message.edit_text(
+    await safe_edit_text(callback.message, 
         f"Оплата доступа на {days} дней\n\nК оплате — {amount} руб\n\nПосле оплаты в этот чат будет отправлен статус платежа",
         reply_markup=builder.as_markup()
     )
@@ -101,7 +102,7 @@ async def accesscry_day(callback: CallbackQuery):
     builder.add(InlineKeyboardButton(text='💳 Оплатить', url=pay_url))
     builder.add(InlineKeyboardButton(text="⬅ Назад", callback_data="Extend"))
     
-    await callback.message.edit_text(f"Оплата доступа на {days} дней\n\nК оплате - {amount} USD", reply_markup=builder.as_markup())
+    await safe_edit_text(callback.message, f"Оплата доступа на {days} дней\n\nК оплате - {amount} USD", reply_markup=builder.as_markup())
 
     
     await monitor_payment(

@@ -1,3 +1,4 @@
+from app.bot.safe_edit import safe_edit_text
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from app.bot.texts.config_vpn import instruction
@@ -28,7 +29,7 @@ async def proxy_anty(call: CallbackQuery):
         user = result_user.scalar_one_or_none()
 
     if user and user.ends_at > now:
-        await call.message.edit_text(text=f'🥇Чат Proxy для браузера  - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
+        await safe_edit_text(call.message, text=f'🥇Чат Proxy для браузера  - полная инструкция\n\nhttps://t.me/+3U-AMqBqDnpmZGJi',
                                      parse_mode='Markdown', reply_markup=main_menu)
     else:
         pass
@@ -37,7 +38,7 @@ async def proxy_anty(call: CallbackQuery):
 @main_menu_router.callback_query(F.data == 'config_vpn')
 async def config_vpn(callback: CallbackQuery):
     await callback.answer('Настройка устройства')
-    await callback.message.edit_text(f'{instruction}', reply_markup=config_menu)
+    await safe_edit_text(callback.message, f'{instruction}', reply_markup=config_menu)
 
 
 @main_menu_router.callback_query(F.data == 'profile')
@@ -56,24 +57,33 @@ async def profile(callback: CallbackQuery):
         payment = payment_result.scalar()
         now = datetime.utcnow()
 
+    if user is None:
+        await callback.message.answer("Профиль не найден. Нажмите /start, чтобы начать.")
+        return
+
+    # у пользователя на пробном периоде платежей ещё нет
+    if payment:
+        last_payment = (f'Последний платёж: {payment.amount} {payment.currency}\n'
+                        f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n')
+    else:
+        last_payment = 'Последний платёж: пока нет (пробный период)\n'
+
     if user.ends_at and user.ends_at > now:
         day_count = (user.ends_at - now).days
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-        await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
+        await safe_edit_text(callback.message, f'🖥{name}\nID: {tg_id}\n\n'
                                      f'Статус: ✅🚀\n'
                                      f'Активна до {end_date}\n\n\n'
-                                     f'Последний платёж: {payment.amount} {payment.currency}\n'
-                                     f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n'
+                                     f'{last_payment}'
                                      f'Осталось: {day_count} дней', reply_markup=main_menu)
     elif user.ends_at and user.ends_at < now:
         end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-        await callback.message.edit_text(f'🖥{name}\nID: {tg_id}\n\n'
+        await safe_edit_text(callback.message, f'🖥{name}\nID: {tg_id}\n\n'
                                          f'Статус: 🔴⏳\n'
                                          f'Подписка истекла! {end_date}\n'
-                                         f'Последний платёж: {payment.amount} {payment.currency}\n'
-                                         f'Совершён: {payment.create_payment.strftime("%d.%m.%Y %H:%M")}\n', reply_markup=main_menu)
+                                         f'{last_payment}', reply_markup=main_menu)
     elif not user.ends_at:
-        await callback.message.edit_text(f'Профиль 🖥{name}\nID: {tg_id}\n\n'
+        await safe_edit_text(callback.message, f'Профиль 🖥{name}\nID: {tg_id}\n\n'
                                          f'Статус: ⏳ Нет подписки', reply_markup=main_menu)
 
 
@@ -94,7 +104,7 @@ async def referral_info(callback: CallbackQuery):
         )
         count = count_result.scalar()
 
-    await callback.message.edit_text(
+    await safe_edit_text(callback.message, 
         f"🤝Приглашайте друзей и получайте бонусные дни подписки!\n\n"
         f"За каждого друга, который оплатит подписку, вам начислится {REFERRAL_BONUS_DAYS} дней доступа.\n\n"
         f"Ваша реферальная ссылка:\n`{link}`\n\n"
@@ -109,7 +119,7 @@ async def referral_info(callback: CallbackQuery):
 @main_menu_router.callback_query(F.data == "support")
 async def support_answer(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.edit_text(text="Если остались вопросы, возникли проблемы с подключением или обнаружили ошибку\n\nНапишите администратору - @rsfromen", reply_markup=main_menu)
+    await safe_edit_text(callback.message, text="Если остались вопросы, возникли проблемы с подключением или обнаружили ошибку\n\nНапишите администратору - @rsfromen", reply_markup=main_menu)
     
 
 @main_menu_router.callback_query(F.data == "subs")
@@ -121,7 +131,7 @@ async def subs_func(callback: CallbackQuery):
         result_user = await session.execute(select(User).where(User.tg_id == tg_id))
         user = result_user.scalar_one_or_none()
         link = f"https://subs.mirkaprotected.ru/subs/{user.token}"
-        await callback.message.edit_text(
+        await safe_edit_text(callback.message, 
             text=f"Скопируйте ссылку и добавте в приложении Happ или Hiddify\n\n`{link}`",
             parse_mode='Markdown', reply_markup=main_menu)
         
