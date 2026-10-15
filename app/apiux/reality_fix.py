@@ -22,8 +22,10 @@ from app.apiux.servers import SERVERS
 
 logger = logging.getLogger(__name__)
 
-# популярные отпечатки из списка uTLS панели; редкие (360, qq) не берём
-FINGERPRINTS = ("chrome", "firefox", "safari", "ios", "android", "edge")
+# Отпечатки uTLS, с которыми Reality + gRPC реально работает. Проверено 2026-10-15 настоящим клиентом
+# xray 25.12.8 с сервера бота на всех 5 узлах: chrome, firefox, safari, ios, edge, random проходят,
+# android не проходит рукопожатие нигде (curl exit 35), поэтому его не выбираем. 360 и qq тоже не берём.
+FINGERPRINTS = ("chrome", "firefox", "safari", "ios", "edge")
 BACKUP_DIR = Path(__file__).resolve().parents[2] / "backups" / "reality"
 
 # Кандидаты в SNI/dest для Reality. Проверено 2026-10-15: TLS 1.3 + HTTP/2 + валидный сертификат
