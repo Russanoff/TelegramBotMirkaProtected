@@ -16,8 +16,10 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from app.apiux.new_client import XUI
 
 import base64
+import sys
 
 from app.db.models.vpn_clients import Subscription
+from app.bot.admin.notify import notify_admin_throttled
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +155,11 @@ async def get_subscription(token: str):
                     "Не удалось получить ссылку с сервера %s для пользователя %s",
                     server_name, user.tg_id,
                 )
+                await notify_admin_throttled(
+                    f"node:{server_name}",
+                    f"🔴 Узел {SERVERS[server_name]['name']} не ответил при выдаче подписки "
+                    f"({type(sys.exc_info()[1]).__name__}). Если повторяется, проверьте панель и доступность сервера.",
+                    window=3600)
             finally:
                 if xui is not None:
                     await xui.close()

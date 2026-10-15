@@ -16,6 +16,8 @@ from app.bot.admin.delete    import delete_router as del_router
 from app.bot.admin.referral_stats import referral_stats_router
 from app.bot.admin.winback import winback_router
 from app.bot.admin.fixnode import fixnode_router
+from app.bot.admin.errors import errors_router
+from app.bot.admin.pay_reconcile import payment_reconciler
 from dotenv import load_dotenv
 import os
 
@@ -27,6 +29,7 @@ dp = Dispatcher()
 
 async def main():
     await init_db()
+    dp.include_router(errors_router)
     dp.include_router(router_admin)
     dp.include_router(pay_call)
     dp.include_router(stars_router)
@@ -41,6 +44,7 @@ async def main():
     dp.include_router(winback_router)
     dp.include_router(fixnode_router)
     asyncio.create_task(checker_bot(bot))
+    asyncio.create_task(payment_reconciler(bot))
     await dp.start_polling(bot)
 
 

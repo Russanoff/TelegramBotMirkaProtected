@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import select
 
 from app.bot.inline_menu.main_menu import main_menu
+from app.bot.admin.notify import notify_admin_throttled
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 import datetime
@@ -52,8 +53,14 @@ async def send_reminder(bot, session, days_ahead: int):
 
 async def checker_bot(bot):
     while True:
-        async with AsyncSessionLocal() as session:
-            await send_reminder(bot, session, days_ahead=3)
-        async with AsyncSessionLocal() as session:
-            await send_reminder(bot, session, days_ahead=1)
+        try:
+            async with AsyncSessionLocal() as session:
+                await send_reminder(bot, session, days_ahead=3)
+            async with AsyncSessionLocal() as session:
+                await send_reminder(bot, session, days_ahead=1)
+        except Exception as e:
+            # раньше исключение молча убивало задачу, и напоминания переставали уходить
+            logger.exception("Ошибка в рассылке напоминаний")
+            await notify_admin_throttled("checker_bot", f"🚨 Ошибка в рассылке напоминаний: {type(e).__name__}: {str(e)[:200]}",
+                                         bot=bot, window=3600)
         await asyncio.sleep(86400)

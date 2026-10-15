@@ -13,6 +13,7 @@ from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 from app.bot.texts.web_trial import web_trial_hint_text
+from app.bot.admin.notify import notify_admin
 from datetime import timedelta, datetime
 
 
@@ -72,6 +73,21 @@ async def start_func(message: Message, command: CommandObject):
             user = User(tg_id=tg_id, token=token, referrer_id=referrer_id)
             session.add(user)
             await session.commit()
+
+            # уведомление админу о новом клиенте
+            if web_bound:
+                source = "с сайта (триал)" + (f", пригласил {referrer_id}" if referrer_id else "")
+            elif referrer_id:
+                source = f"по реферальной ссылке (пригласил {referrer_id})"
+            else:
+                source = "напрямую"
+            fu = message.from_user
+            await notify_admin(
+                f"🆕 Новый клиент\n"
+                f"ID: {tg_id}\n"
+                f"Имя: {fu.full_name}" + (f" (@{fu.username})" if fu.username else "") + "\n"
+                f"Пришёл: {source}\n"
+                f"Всего пользователей: {count + 1}", bot=message.bot)
 
         if not user.accepted_terms:
             await message.answer(F"Привет, {message.from_user.first_name}\n\n"

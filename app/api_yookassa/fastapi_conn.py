@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from app.bot.admin.notify import notify_admin_throttled
 from fastapi import Request
 
 import yookassa
@@ -35,6 +37,17 @@ app = FastAPI()
 async def _ensure_tables():
     # Таблицы создаёт и бот, но API может подняться раньше него после деплоя.
     await init_db()
+
+
+
+
+@app.exception_handler(Exception)
+async def _unhandled_api_error(request, exc):
+    logger.exception("Необработанная ошибка API: %s %s", request.method, request.url.path)
+    await notify_admin_throttled(
+        f"api:{request.url.path}:{type(exc).__name__}",
+        f"🚨 Ошибка API: {request.method} {request.url.path}\n{type(exc).__name__}: {str(exc)[:200]}")
+    return JSONResponse({"detail": "Internal Server Error"}, status_code=500)
 
 
 app.include_router(subs_router)

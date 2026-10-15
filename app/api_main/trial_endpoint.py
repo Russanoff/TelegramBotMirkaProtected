@@ -15,6 +15,7 @@ from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
+from app.bot.admin.notify import notify_admin_throttled
 from app.db.models.web_trial import WebTrial
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,7 @@ async def create_trial(request: Request):
 
         sub_ids = await _ensure_clients(session, trial)
         if not sub_ids:
+            await notify_admin_throttled("trial:all_nodes_down", "🔴 Триал с сайта не выдан: ни один узел не ответил.", window=900)
             return JSONResponse(
                 {"error": "Серверы сейчас недоступны, попробуйте через минуту."}, status_code=503)
 
