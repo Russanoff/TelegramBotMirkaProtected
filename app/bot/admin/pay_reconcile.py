@@ -58,7 +58,7 @@ async def _handle_canceled(bot, payment_id: int, reason: str | None) -> None:
     if datetime.utcnow() - created < NOTIFY_USER_IF_NEWER_THAN:
         await _tell_user(bot, user_id,
                          f"Оплата не прошла: {why}.\nДоступ не продлён, деньги не списаны. "
-                         "Попробуйте ещё раз через «Продлить доступ».")
+                         "Попробуйте ещё раз через «Пополнить баланс».")
 
 
 async def _handle_succeeded(bot, payment_id: int) -> None:

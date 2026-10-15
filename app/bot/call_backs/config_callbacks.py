@@ -2,6 +2,7 @@ from app.bot.safe_edit import safe_edit_text
 from aiogram import Router, F
 from aiogram.filters.callback_data import CallbackQuery
 from app.bot.inline_menu.main_menu import main_menu
+from app.bot.texts.main_menu import main_menu_text
 from app.bot.inline_menu.config_menu import config_menu
 from app.bot.texts.config_vpn import instruction
 from app.apiux.servers import SERVERS
@@ -32,11 +33,5 @@ async def back_to_main_menu(callback: CallbackQuery):
         user = user_res.scalar_one_or_none()
         now = datetime.utcnow()
 
-        if user.ends_at and user.ends_at > now:
-            end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
-            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n",
-                                 reply_markup=main_menu)
-        elif user.ends_at and user.ends_at < now:
-            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка истекла🔴⏳", reply_markup=main_menu)
-        elif not user.ends_at:
-            await safe_edit_text(callback.message, f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nНет подписки⏳", reply_markup=main_menu)
+        text = main_menu_text(user, count, len(SERVERS), now)
+    await safe_edit_text(callback.message, text, reply_markup=main_menu, parse_mode="HTML")

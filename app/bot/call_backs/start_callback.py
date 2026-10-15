@@ -9,6 +9,7 @@ from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 from app.apiux.servers import SERVERS
 from app.bot.texts.web_trial import web_trial_hint_text
+from app.bot.texts.main_menu import subscription_block
 from datetime import datetime
 from sqlalchemy import select
 
@@ -40,10 +41,12 @@ async def open_main_menu(callback: CallbackQuery):
             select(WebTrial.ends_at).where(WebTrial.tg_id == tg_user).order_by(WebTrial.id.desc()).limit(1))
         trial_ends = trial_result.scalar_one_or_none()
         hint = web_trial_hint_text(user, trial_ends, datetime.utcnow(), len(SERVERS)) if trial_ends else ""
+        sub_block = subscription_block(user)
 
     text = 'Соглашение принято! Добро пожаловать в Главное меню MirkaProtected!\n\n'
     if hint:
         text += hint
+    text = text.rstrip("\n") + sub_block
 
     await callback.answer('Соглашение принято!')
-    await safe_edit_text(callback.message, text, reply_markup=main_menu)
+    await safe_edit_text(callback.message, text, reply_markup=main_menu, parse_mode="HTML")
