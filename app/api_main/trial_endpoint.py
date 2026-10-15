@@ -239,4 +239,4 @@ async def trial_subscription(token: str):
     per_server = await asyncio.gather(*(_links_for(n, s) for n, s in sub_ids.items()))
     links = [link for chunk in per_server for link in chunk]
     return PlainTextResponse(base64.b64encode("\n".join(links).encode()).decode(),
-                             headers=subscription_headers(trial_ends))
+                             headers=subscription_headers(trial_ends, trial_token=token))

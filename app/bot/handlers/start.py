@@ -14,6 +14,8 @@ from app.db.models.user import User
 from app.db.models.web_trial import WebTrial
 from app.bot.texts.web_trial import web_trial_hint_text
 from app.bot.admin.notify import notify_admin_background
+from app.bot.inline_menu.end_subs_menu import step_one
+from app.bot.texts.pay import PAY_MENU_TEXT
 from datetime import timedelta, datetime
 
 
@@ -30,6 +32,10 @@ async def start_func(message: Message, command: CommandObject):
     web_referrer = None
     web_bound = False
     web_trial_ends = None
+    want_pay = False
+    if ref_payload == "pay":  # ссылка из подписки в Happ: открыть выбор способа оплаты
+        want_pay = True
+        ref_payload = None
     if ref_payload and ref_payload.startswith("web_"):
         web_token = ref_payload[len("web_"):]
         ref_payload = None
@@ -94,6 +100,9 @@ async def start_func(message: Message, command: CommandObject):
                                  F"{hello_text}", reply_markup=keyboard_start)
             return
         else:
+            if want_pay:
+                await message.answer(PAY_MENU_TEXT, reply_markup=step_one)
+                return
             if user.ends_at and user.ends_at > now:
                 end_date = user.ends_at.strftime("%d.%m.%Y %H:%M")
                 await message.answer(f"🟢Активные локации: {len(SERVERS)}\n👥Пользователей: {count}\n\nПодписка активна✅🚀\nИстекает - {end_date}\n\n", reply_markup=main_menu)

@@ -26,22 +26,50 @@ logger = logging.getLogger(__name__)
 subs_router = APIRouter()
 
 PROFILE_TITLE = "MirkaProtected"
-SUPPORT_URL = "https://t.me/rsfromen"
+BOT_URL = "https://t.me/mirkaprotecbot"
+PAY_URL = BOT_URL + "?start=pay"   # открывает в боте выбор способа оплаты
+ANNOUNCE_DAYS = 7                  # объявление в приложении показываем, когда до конца осталось не больше
 UPDATE_INTERVAL_HOURS = 3  # как часто приложение само обновляет подписку (после смены конфигов узлов)
 
 
-def subscription_headers(ends_at: datetime.datetime) -> dict:
-    """Заголовки, по которым Happ/Hiddify и др. показывают срок подписки и сами её обновляют.
+def subscription_headers(ends_at: datetime.datetime, trial_token: str | None = None,
+                         now: datetime.datetime | None = None) -> dict:
+    """Заголовки, по которым Happ показывает срок подписки, кнопки и сам обновляет подписку.
 
     ends_at - наивное время в UTC (так хранится в БД). total=0 - без лимита трафика.
+    trial_token - у триала с сайта ссылки в бота несут токен (start=web_<токен>), чтобы нажатие
+    сразу привязывало триал к аккаунту; у обычной подписки они ведут в меню оплаты.
+
+    Что делает Happ (документация Happ, «App management»): support-url - кнопка справа (значок
+    Telegram), profile-web-page-url - кнопка слева, sub-expire + sub-expire-button-link - уведомление
+    с кнопкой «Продлить» за 3 дня до конца и после него, announce - текст до 200 символов,
+    notification-subs-expire - ежедневное уведомление за 3 дня до конца.
     """
+    now = now or datetime.datetime.utcnow()
     expire = int(ends_at.replace(tzinfo=datetime.timezone.utc).timestamp())
-    return {
+    bot_link = f"{BOT_URL}?start=web_{trial_token}" if trial_token else BOT_URL
+    action_link = f"{BOT_URL}?start=web_{trial_token}" if trial_token else PAY_URL
+    headers = {
         "Subscription-Userinfo": f"upload=0; download=0; total=0; expire={expire}",
         "Profile-Title": PROFILE_TITLE,
         "Profile-Update-Interval": str(UPDATE_INTERVAL_HOURS),
-        "Support-Url": SUPPORT_URL,
+        "Support-Url": bot_link,
+        "Profile-Web-Page-Url": action_link,
+        "Sub-Expire": "1",
+        "Sub-Expire-Button-Link": action_link,
+        "Notification-Subs-Expire": "1",
     }
+    left = ends_at - now
+    text = None
+    if trial_token:
+        text = f"Бесплатный доступ до {ends_at:%d.%m}. Закрепите его в боте @mirkaprotecbot"
+    elif left <= datetime.timedelta(0):
+        text = f"Подписка закончилась {ends_at:%d.%m}. Продлите в боте @mirkaprotecbot"
+    elif left <= datetime.timedelta(days=ANNOUNCE_DAYS):
+        text = f"Подписка до {ends_at:%d.%m}. Продлить: значок слева или бот @mirkaprotecbot"
+    if text:
+        headers["Announce"] = "base64:" + base64.b64encode(text.encode("utf-8")).decode()
+    return headers
 
 
 def build_vless_links(inbounds: dict, sub_id: str, server_name: str) -> list[str]:
