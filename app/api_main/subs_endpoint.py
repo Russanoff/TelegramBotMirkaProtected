@@ -29,6 +29,17 @@ PROFILE_TITLE = "MirkaProtected"
 BOT_URL = "https://t.me/mirkaprotecbot"
 PAY_URL = BOT_URL + "?start=pay"   # открывает в боте выбор способа оплаты
 ANNOUNCE_DAYS = 7                  # объявление в приложении показываем, когда до конца осталось не больше
+HAPP_PROVIDER_ID = "uWtxLsbx"      # из кабинета happ-proxy.com; без него Happ игнорирует настройки приложения ниже
+# Настройки приложения Happ (документация Happ, «App management»; работают только с providerid):
+# при запуске подключаться к серверу с лучшей задержкой, а задержку мерить через настоящее
+# соединение (узел, до которого не проходит рукопожатие, получит n/a и не будет выбран)
+HAPP_APP_SETTINGS = {
+    "Providerid": HAPP_PROVIDER_ID,
+    "Subscription-Autoconnect": "1",
+    "Subscription-Autoconnect-Type": "lowestdelay",
+    "Subscription-Ping-Onopen-Enabled": "1",
+    "Ping-Type": "proxy",
+}
 UPDATE_INTERVAL_HOURS = 3  # как часто приложение само обновляет подписку (после смены конфигов узлов)
 
 
@@ -58,6 +69,7 @@ def subscription_headers(ends_at: datetime.datetime, trial_token: str | None = N
         "Sub-Expire": "1",
         "Sub-Expire-Button-Link": action_link,
         "Notification-Subs-Expire": "1",
+        **HAPP_APP_SETTINGS,
     }
     left = ends_at - now
     text = None
