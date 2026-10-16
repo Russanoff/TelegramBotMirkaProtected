@@ -3,6 +3,8 @@ import os
 
 load_dotenv()
 
+# Порядок важен: в этом порядке ссылки идут в подписке (первые Германия и Латвия: на
+# некоторых домашних сетях в РФ работают только узлы их хостера, остальные - позже).
 SERVERS = {
     "GE": {
         "name": "🇩🇪Germany",
@@ -14,16 +16,6 @@ SERVERS = {
         "host": "germany.mirkaprotected.ru"
     },
     
-    "PL": {
-        "name": "🇵🇱Poland",
-        "panel_url": "https://89.125.159.161:40184/G7EEoRhzE2XqDTs6Ub/",
-        "username": os.getenv('ADMIN'),
-        "password": os.getenv('PASSWORD'),
-        "remark": "Poland",
-        "sub_base": "https://89.125.159.161:2096/sub/",
-        "host": "89.125.159.161"
-    },
-    
     "LT": {
         "name": "🇱🇻Latvija",
         "panel_url": "https://ltv.mirkaprotected.ru:4545/vcQi219B8pAO8MeLE4/",
@@ -33,8 +25,17 @@ SERVERS = {
         "sub_base": "https://ltv.mirkaprotected.ru:2096/subScSr/",
         "host": "ltv.mirkaprotected.ru"
     },
-    
-    
+
+    "PL": {
+        "name": "🇵🇱Poland",
+        "panel_url": "https://89.125.159.161:40184/G7EEoRhzE2XqDTs6Ub/",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "Poland",
+        "sub_base": "https://89.125.159.161:2096/sub/",
+        "host": "89.125.159.161"
+    },
+
     "NL": {
         "name": "🇳🇱Nederlanden",
         "panel_url": "https://panel.mirkaprotected.ru:8443/Tg8fvceLgQdcFALcQ1/",
