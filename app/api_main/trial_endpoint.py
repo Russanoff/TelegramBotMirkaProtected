@@ -33,6 +33,9 @@ PANEL_TIMEOUT = 25             # сек на одну панель, чтобы �
 COOKIE_NAME = "trial_token"
 BOT_USERNAME = "mirkaprotecbot"
 PUBLIC_URL = "https://trial.mirkaprotected.ru"
+# Ссылка на подписку - с домена подписок: Provider ID Happ привязан к одному домену (второй платный),
+# а nginx на subs. отдаёт /t/<токен> в то же API; старые ссылки с trial. продолжают работать
+SUB_URL = "https://subs.mirkaprotected.ru"
 
 # Защита от двойного создания клиентов при параллельных запросах одного токена
 _locks: dict[str, asyncio.Lock] = {}
@@ -105,7 +108,7 @@ async def _valid_referrer(session, raw: str | None) -> int | None:
 
 def _payload(trial: WebTrial) -> dict:
     return {
-        "sub_url": f"{PUBLIC_URL}/t/{trial.token}",
+        "sub_url": f"{SUB_URL}/t/{trial.token}",
         "ends_at": trial.ends_at.isoformat() + "Z",
         "bot_url": f"https://t.me/{BOT_USERNAME}?start=web_{trial.token}",
     }
