@@ -58,7 +58,9 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "USA",
         "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/",
-        "host": "usa.mirkaprotected.ru"
+        "host": "usa.mirkaprotected.ru",
+        # второй («боевой») вход, как на NL: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель
+        "vision": {"remark": "USA-Vision", "label": "🇺🇸USA-Боевой", "suffix": "_V"},
     },
 
 }
