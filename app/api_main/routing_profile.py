@@ -2,22 +2,19 @@
 
 Доставка: строка happ://routing/onadd/<base64 JSON> в начале тела подписки (документация Happ, «Routing»).
 onadd добавляет профиль и сразу включает его; профиль с тем же именем перезаписывается, поэтому при
-изменении списков поднимайте ROUTING_UPDATED. Названия geosite/geoip сверены с базой runetfreedom
+изменении списков поднимайте ROUTING_UPDATED (на новое Unix-время). Названия geosite/geoip сверены с базой runetfreedom
 (russia-v2ray-rules-dat), а домены, которых в категориях может не быть, перечислены явно.
 """
 import base64
 import json
 
 ROUTING_NAME = "MirkaProtected: РФ напрямую"
-ROUTING_UPDATED = "1793212000"   # Unix-время правки списков; при изменении профиля увеличивать
+ROUTING_UPDATED = "1793220000"   # Unix-время правки списков; при изменении профиля увеличивать
 GEO_BASE = "https://github.com/runetfreedom/russia-v2ray-rules-dat/releases/latest/download"
 
-# категории из geosite.dat (проверены наличием в базе)
-DIRECT_CATEGORIES = [
-    "category-ru", "ru-available-only-inside", "category-bank-ru", "category-gov-ru", "category-ecommerce-ru",
-    "category-retail-ru", "category-entertainment-ru", "yandex", "vk", "mailru", "wildberries", "avito", "2gis",
-    "tbank", "raiffeisen", "apple", "google-play", "steam", "private",
-]
+# ТОЛЬКО категории, которые есть в любых стандартных geosite-файлах: если Happ запустит ядро с другим файлом, чем
+# мы ожидаем, отсутствующая категория (как ru-available-only-inside) не даёт ядру стартовать. Всё остальное - явными доменами.
+DIRECT_CATEGORIES = ["category-ru", "private", "apple", "google-play", "steam"]
 
 # явные домены (в geosite.dat они есть, но не в каждой категории; перечислены на случай, если список поменяется)
 DIRECT_DOMAINS = [
