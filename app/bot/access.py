@@ -38,6 +38,8 @@ async def extend_user_access(session: AsyncSession, user: User, days: int, bot=N
             xui = XUI(server)
             await xui.login()
             await xui.update_expiry(client_name=f"TG_{user.tg_id}", ends_at=user.ends_at, subs_id=sub.sub_id)
+            if server.get("vision"):  # клиент во втором («боевом») входе: тот же срок
+                await xui.update_expiry(client_name=f"TG_{user.tg_id}{server['vision']['suffix']}", ends_at=user.ends_at, subs_id=sub.sub_id)
             await xui.close()
         except Exception:
             logger.exception(

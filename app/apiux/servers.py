@@ -33,7 +33,8 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "Poland",
         "sub_base": "https://89.125.159.161:2096/sub/",
-        "host": "89.125.159.161"
+        # домен вместо IP: при блокировке адреса достаточно поменять A-запись, клиентские ссылки не меняются
+        "host": "poland.mirkaprotected.ru"
     },
 
     "NL": {
@@ -43,7 +44,11 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "Nederlanden",
         "sub_base": "https://panel.mirkaprotected.ru:2096/sub/",
-        "host": "panel.mirkaprotected.ru"
+        "host": "panel.mirkaprotected.ru",
+        # Второй вход на том же узле: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель с настоящим
+        # сертификатом. Проходит там, где gRPC + Reality режется (проверено владельцем). Клиент в нём создаётся
+        # с тем же subId, что и в основном входе (email с суффиксом), ссылка идёт в подписку отдельной строкой.
+        "vision": {"remark": "Nederlanden-Vision", "label": "🇳🇱Nederlanden-Боевой", "suffix": "_V"},
     },
 
     "USA": {

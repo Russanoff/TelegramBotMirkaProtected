@@ -44,12 +44,12 @@ class XUI:
         client_name: str,
         flow: str,
         tg_id: int,
-        ends_at: datetime
+        ends_at: datetime,
+        sub_id: str | None = None,
     ):
 
         expiry_time = int(ends_at.timestamp() * 1000)
-        sub_id = secrets.token_urlsafe(9)
-        flow = ""
+        sub_id = sub_id or secrets.token_urlsafe(9)
         client_uuid = str(uuid.uuid4())
 
         payload = {
@@ -128,7 +128,9 @@ class XUI:
                                     "id": client_id,
                                     "expiryTime": expiry_time,
                                     "enable": True,
-                                    #"flow": 'xtls-rprx-vision',
+                                    # flow сохраняем как есть: у клиента второго («боевого») входа это Vision, без него
+                                    # продление сломало бы ему подключение
+                                    "flow": client.get("flow", ""),
                                     "email": client_name,
                                     "subId": subs_id,
                                     "comment": 'Повторный доступ'

@@ -20,6 +20,7 @@ import sys
 
 from app.db.models.vpn_clients import Subscription
 from app.bot.admin.notify import notify_admin_throttled
+from app.apiux.vision import ensure_vision_client, promote_vision_links
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,18 @@ def build_vless_links(inbounds: dict, sub_id: str, server_name: str) -> list[str
             port = inbound["port"]
             remark = SERVERS[server_name]["name"]
 
+            if stream.get("network") == "tcp":
+                vision = SERVERS[server_name].get("vision") or {}
+                label = vision.get("label") if inbound.get("remark") == vision.get("remark") else remark
+                flow = client.get("flow") or ""
+                links.append(
+                    f"vless://{uuid}@{host}:{port}"
+                    f"?type=tcp&encryption=none&security=reality"
+                    f"&pbk={public_key}&fp={fingerprint}&sni={sni}&sid={short_id}&spx=%2F"
+                    + (f"&flow={flow}" if flow else "")
+                    + f"#{label}")
+                continue
+
             vless = (
                 f"vless://{uuid}@{host}:{port}"
                 f"?type=grpc"
@@ -187,6 +200,12 @@ async def get_subscription(token: str):
                     sub_id = sub.sub_id
 
                 inbounds = await xui.get_inbounds()
+                try:
+                    if await ensure_vision_client(xui, server, inbounds, sub_id, f"TG_{user.tg_id}", user.tg_id, user.ends_at):
+                        inbounds = await xui.get_inbounds()
+                except Exception:
+                    # второй вход - дополнение: его сбой не должен лишить человека основных ссылок
+                    logger.exception("Не удалось создать клиента во втором входе %s для %s", server_name, user.tg_id)
                 links.extend(build_vless_links(inbounds, sub_id, server_name))
             except Exception:
                 # Одна недоступная панель не должна ронять весь ответ -
@@ -217,7 +236,7 @@ async def get_subscription(token: str):
             except Exception:
                 logger.exception("Не удалось уведомить админа о пустой подписке для %s", user.tg_id)
 
-        result = "\n".join(links)
+        result = "\n".join(promote_vision_links(links, SERVERS))
 
         encoded = base64.b64encode(result.encode()).decode()
 

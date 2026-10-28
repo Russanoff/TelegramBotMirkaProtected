@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from sqlalchemy import func, select
 
+from app.apiux.vision import ensure_vision_client, promote_vision_links
 from app.api_main.subs_endpoint import build_vless_links, get_subscription, subscription_headers
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
@@ -188,14 +189,22 @@ async def create_trial(request: Request):
         return response
 
 
-async def _links_for(server_name: str, sub_id: str) -> list[str]:
+async def _links_for(server_name: str, sub_id: str, base_email: str = "", ends_at=None) -> list[str]:
     if server_name not in SERVERS:
         return []  # старые триалы могут помнить узел, который уже удалён
     xui = XUI(SERVERS[server_name])
     try:
         async def _do():
             await xui.login()
-            return build_vless_links(await xui.get_inbounds(), sub_id, server_name)
+            inbounds = await xui.get_inbounds()
+            if base_email and ends_at is not None:
+                try:
+                    # второй («боевой») вход: клиента заводим и старым триалам, при первом же обновлении подписки
+                    if await ensure_vision_client(xui, SERVERS[server_name], inbounds, sub_id, base_email, 0, ends_at):
+                        inbounds = await xui.get_inbounds()
+                except Exception:
+                    logger.exception("Триал: не удалось создать клиента во втором входе %s", server_name)
+            return build_vless_links(inbounds, sub_id, server_name)
 
         return await asyncio.wait_for(_do(), PANEL_TIMEOUT)
     except Exception:
@@ -230,6 +239,7 @@ async def trial_subscription(token: str):
             user_token = None
 
         trial_ends = trial.ends_at
+        trial_name = _client_name(trial)
         if user_token is None:
             if trial.ends_at <= now:
                 raise HTTPException(status_code=410, detail="Trial expired")
@@ -239,7 +249,7 @@ async def trial_subscription(token: str):
         # вне сессии: get_subscription открывает свою и пишет в SQLite
         return await get_subscription(user_token)
 
-    per_server = await asyncio.gather(*(_links_for(n, s) for n, s in sub_ids.items()))
-    links = [link for chunk in per_server for link in chunk]
+    per_server = await asyncio.gather(*(_links_for(n, s, trial_name, trial_ends) for n, s in sub_ids.items()))
+    links = promote_vision_links([link for chunk in per_server for link in chunk], SERVERS)
     return PlainTextResponse(base64.b64encode("\n".join(links).encode()).decode(),
                              headers=subscription_headers(trial_ends, trial_token=token))
