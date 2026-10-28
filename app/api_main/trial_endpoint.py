@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Res
 from sqlalchemy import func, select
 
 from app.apiux.vision import ensure_vision_client, promote_vision_links
+from app.api_main.routing_profile import ROUTING_LINE
 from app.api_main.subs_endpoint import build_vless_links, get_subscription, subscription_headers
 from app.apiux.new_client import XUI
 from app.apiux.servers import SERVERS
@@ -251,5 +252,6 @@ async def trial_subscription(token: str):
 
     per_server = await asyncio.gather(*(_links_for(n, s, trial_name, trial_ends) for n, s in sub_ids.items()))
     links = promote_vision_links([link for chunk in per_server for link in chunk], SERVERS)
-    return PlainTextResponse(base64.b64encode("\n".join(links).encode()).decode(),
+    body = "\n".join([ROUTING_LINE, *links]) if links else ""
+    return PlainTextResponse(base64.b64encode(body.encode()).decode(),
                              headers=subscription_headers(trial_ends, trial_token=token))

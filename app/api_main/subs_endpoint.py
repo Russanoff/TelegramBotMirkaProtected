@@ -21,6 +21,7 @@ import sys
 from app.db.models.vpn_clients import Subscription
 from app.bot.admin.notify import notify_admin_throttled
 from app.apiux.vision import ensure_vision_client, promote_vision_links
+from app.api_main.routing_profile import ROUTING_LINE
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +237,8 @@ async def get_subscription(token: str):
             except Exception:
                 logger.exception("Не удалось уведомить админа о пустой подписке для %s", user.tg_id)
 
-        result = "\n".join(promote_vision_links(links, SERVERS))
+        # первой строкой - профиль маршрутизации Happ (российские сайты и банки напрямую)
+        result = "\n".join([ROUTING_LINE, *promote_vision_links(links, SERVERS)]) if links else ""
 
         encoded = base64.b64encode(result.encode()).decode()
 
