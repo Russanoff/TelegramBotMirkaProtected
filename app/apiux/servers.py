@@ -48,7 +48,7 @@ SERVERS = {
         # Второй вход на том же узле: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель с настоящим
         # сертификатом. Проходит там, где gRPC + Reality режется (проверено владельцем). Клиент в нём создаётся
         # с тем же subId, что и в основном входе (email с суффиксом), ссылка идёт в подписку отдельной строкой.
-        "vision": {"remark": "Nederlanden-Vision", "label": "🇳🇱Nederlanden-Боевой", "suffix": "_V"},
+        "vision": {"remark": "Nederlanden-Vision", "label": "🇳🇱Nederlanden2", "suffix": "_V"},
     },
 
     "USA": {
@@ -60,7 +60,7 @@ SERVERS = {
         "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/",
         "host": "usa.mirkaprotected.ru",
         # второй («боевой») вход, как на NL: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель
-        "vision": {"remark": "USA-Vision", "label": "🇺🇸USA-Боевой", "suffix": "_V"},
+        "vision": {"remark": "USA-Vision", "label": "🇺🇸USA2", "suffix": "_V"},
     },
 
 }
