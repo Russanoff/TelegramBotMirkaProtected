@@ -24,7 +24,7 @@ SERVERS = {
             "remark": "RuExit",
             "sub_base": "https://rukas.mirkaprotected.ru:2096/subTurNNWWiop/",
             "host": "rukas.mirkaprotected.ru"
-        },
+    },
 
     "PL": {
         "name": "🇵🇱Poland",
