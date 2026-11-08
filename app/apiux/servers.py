@@ -17,13 +17,13 @@ SERVERS = {
     },
     
     "RU-USA": {
-            "name": "🇺🇸Ru-Usa",
-            "panel_url": "https://rukas.mirkaprotected.ru:21394/71GHmuywVL0m06LFCf/",
-            "username": os.getenv('ADMIN'),
-            "password": os.getenv('PASSWORD'),
-            "remark": "RuExit",
-            "sub_base": "https://rukas.mirkaprotected.ru:2096/subTurNNWWiop/",
-            "host": "rukas.mirkaprotected.ru"
+        "name": "🇺🇸Ru-Usa",
+        "panel_url": "https://rukas.mirkaprotected.ru:21394/71GHmuywVL0m06LFCf/",
+        "username": os.getenv('ADMIN'),
+        "password": os.getenv('PASSWORD'),
+        "remark": "RuExit",
+        "sub_base": "https://rukas.mirkaprotected.ru:2096/subTurNNWWiop/",
+        "host": "rukas.mirkaprotected.ru"
     },
 
     "PL": {
