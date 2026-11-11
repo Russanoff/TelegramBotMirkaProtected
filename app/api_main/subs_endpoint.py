@@ -20,7 +20,7 @@ import sys
 
 from app.db.models.vpn_clients import Subscription
 from app.bot.admin.notify import notify_admin_throttled
-from app.apiux.vision import ensure_vision_client, promote_vision_links
+from app.apiux.vision import ensure_vision_client, extra_label, promote_vision_links
 from app.api_main.routing_profile import ROUTING_LINE
 
 logger = logging.getLogger(__name__)
@@ -121,11 +121,11 @@ def build_vless_links(inbounds: dict, sub_id: str, server_name: str) -> list[str
             short_id = short_ids[0]
             host = SERVERS[server_name]["host"]
             port = inbound["port"]
-            remark = SERVERS[server_name]["name"]
+            # дополнительный вход (Vision, пересылка через другой узел) подписывается своим названием
+            remark = extra_label(SERVERS[server_name], inbound.get("remark")) or SERVERS[server_name]["name"]
 
             if stream.get("network") == "tcp":
-                vision = SERVERS[server_name].get("vision") or {}
-                label = vision.get("label") if inbound.get("remark") == vision.get("remark") else remark
+                label = remark
                 flow = client.get("flow") or ""
                 links.append(
                     f"vless://{uuid}@{host}:{port}"

@@ -8,6 +8,7 @@ from app.db.models.user import User
 from app.db.models.vpn_clients import Subscription
 from app.apiux.servers import SERVERS
 from app.apiux.new_client import XUI
+from app.apiux.vision import client_emails
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,9 @@ async def grant_referral_bonus(session: AsyncSession, user: User, bot=None) -> N
             server = SERVERS[sub.server_name]
             xui = XUI(server)
             await xui.login()
-            await xui.update_expiry(client_name=f"TG_{referrer.tg_id}", ends_at=referrer.ends_at, subs_id=sub.sub_id)
+            # основной вход и все дополнительные (Vision, пересылки): раньше бонус продлевал только основной
+            for email in client_emails(server, f"TG_{referrer.tg_id}"):
+                await xui.update_expiry(client_name=email, ends_at=referrer.ends_at, subs_id=sub.sub_id)
             await xui.close()
         except Exception:
             logger.exception(

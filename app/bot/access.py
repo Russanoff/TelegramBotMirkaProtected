@@ -8,6 +8,7 @@ from app.db.models.user import User
 from app.db.models.vpn_clients import Subscription
 from app.apiux.servers import SERVERS
 from app.apiux.new_client import XUI
+from app.apiux.vision import client_emails
 from app.bot.referral import grant_referral_bonus
 
 logger = logging.getLogger(__name__)
@@ -37,9 +38,9 @@ async def extend_user_access(session: AsyncSession, user: User, days: int, bot=N
             server = SERVERS[sub.server_name]
             xui = XUI(server)
             await xui.login()
-            await xui.update_expiry(client_name=f"TG_{user.tg_id}", ends_at=user.ends_at, subs_id=sub.sub_id)
-            if server.get("vision"):  # клиент во втором («боевом») входе: тот же срок
-                await xui.update_expiry(client_name=f"TG_{user.tg_id}{server['vision']['suffix']}", ends_at=user.ends_at, subs_id=sub.sub_id)
+            # основной вход и все дополнительные (Vision, пересылки): срок один
+            for email in client_emails(server, f"TG_{user.tg_id}"):
+                await xui.update_expiry(client_name=email, ends_at=user.ends_at, subs_id=sub.sub_id)
             await xui.close()
         except Exception:
             logger.exception(

@@ -34,7 +34,13 @@ SERVERS = {
         "remark": "Poland",
         "sub_base": "https://89.125.159.161:2096/sub/",
         # домен вместо IP: при блокировке адреса достаточно поменять A-запись, клиентские ссылки не меняются
-        "host": "poland.mirkaprotected.ru"
+        "host": "poland.mirkaprotected.ru",
+        # Пересылки: вход на PL, выход в USA/NL. Адреса USA и NL заблокированы в РФ целиком (проверено 12.11.2026
+        # из Енакиево и с российского сервера rukas), а PL доступен. Выходы и маршруты - в шаблоне Xray панели PL.
+        "extras": [
+            {"remark": "PL-USA", "label": "🇺🇸USA(PL)", "suffix": "_U"},
+            {"remark": "PL-NL", "label": "🇳🇱Nederlanden(PL)", "suffix": "_N"},
+        ],
     },
 
     "NL": {
