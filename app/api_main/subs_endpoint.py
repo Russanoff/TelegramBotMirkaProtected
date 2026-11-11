@@ -11,7 +11,7 @@ from app.db.models.user import User
 from app.db.database import AsyncSessionLocal
 from sqlalchemy import select
 from app.apiux.new_client import XUI
-from app.apiux.servers import SERVERS
+from app.apiux.servers import SERVERS, subscription_servers
 from fastapi.responses import JSONResponse, PlainTextResponse
 from app.apiux.new_client import XUI
 
@@ -169,7 +169,7 @@ async def get_subscription(token: str):
 
         links = []
 
-        for server_name, server in SERVERS.items():
+        for server_name, server in subscription_servers().items():
             xui = None
             try:
                 result_subs = await session.execute(

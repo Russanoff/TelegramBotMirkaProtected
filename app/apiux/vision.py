@@ -33,11 +33,10 @@ def vision_labels(servers: dict) -> set[str]:
 
 
 def promote_vision_links(links: list[str], servers: dict) -> list[str]:
-    """Ссылки дополнительных входов ставим сразу после первой, остальной порядок не меняем."""
-    labels = vision_labels(servers)
-    extra = [l for l in links if l.rsplit("#", 1)[-1] in labels]
-    rest = [l for l in links if l not in extra]
-    return rest[:1] + extra + rest[1:]
+    """Порядок ссылок в подписке по SUB_ORDER (самые быстрые и надёжные сверху); прочие - в конце, как были."""
+    from app.apiux.servers import SUB_ORDER
+    rank = {label: i for i, label in enumerate(SUB_ORDER)}
+    return sorted(links, key=lambda l: rank.get(l.rsplit("#", 1)[-1], len(rank)))
 
 
 async def ensure_vision_client(xui, server: dict, inbounds: dict, sub_id: str, base_email: str, tg_id: int, ends_at) -> bool:

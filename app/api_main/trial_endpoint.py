@@ -14,7 +14,7 @@ from app.apiux.vision import ensure_vision_client, promote_vision_links
 from app.api_main.routing_profile import ROUTING_LINE
 from app.api_main.subs_endpoint import build_vless_links, get_subscription, subscription_headers
 from app.apiux.new_client import XUI
-from app.apiux.servers import SERVERS
+from app.apiux.servers import SERVERS, subscription_servers
 from app.db.database import AsyncSessionLocal
 from app.db.models.user import User
 from app.bot.admin.notify import notify_admin_throttled
@@ -28,7 +28,7 @@ WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 TRIAL_HOURS = 48
 # Триал с сайта выдаётся сразу на все локации: часть узлов может не работать в конкретной
 # сети (мобильная или Wi-Fi), и гостю нужен хотя бы один рабочий.
-TRIAL_SERVERS = tuple(SERVERS)
+TRIAL_SERVERS = tuple(subscription_servers())
 MAX_TRIALS_PER_IP = 2          # за окно IP_WINDOW_HOURS (за одним мобильным NAT сидят многие)
 IP_WINDOW_HOURS = 24
 PANEL_TIMEOUT = 25             # сек на одну панель, чтобы одна упавшая не вешала страницу
@@ -191,8 +191,8 @@ async def create_trial(request: Request):
 
 
 async def _links_for(server_name: str, sub_id: str, base_email: str = "", ends_at=None) -> list[str]:
-    if server_name not in SERVERS:
-        return []  # старые триалы могут помнить узел, который уже удалён
+    if server_name not in SERVERS or SERVERS[server_name].get("hidden"):
+        return []  # старые триалы могут помнить узел, который уже удалён или скрыт из подписки
     xui = XUI(SERVERS[server_name])
     try:
         async def _do():

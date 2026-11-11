@@ -165,19 +165,20 @@ async def main():
         try:
             targets = await node_targets(key, srv)
         except Exception as e:
-            results.append({"node": key, "label": srv["name"], "ok": False, "why": f"панель недоступна ({type(e).__name__})"}); continue
+            results.append({"node": key, "label": srv["name"], "hidden": bool(srv.get("hidden")), "ok": False, "why": f"панель недоступна ({type(e).__name__})"}); continue
         for remark, link in targets:
             label = (urllib.parse.unquote(link.rsplit("#", 1)[1]) if link else remark)
+            hidden = bool(srv.get("hidden"))
             if not link:
-                results.append({"node": key, "label": label, "skip": "вход не найден на панели"}); continue
+                results.append({"node": key, "label": label, "hidden": hidden, "skip": "вход не найден на панели"}); continue
             u = urllib.parse.urlparse(link)
             ok, info, ip = await asyncio.to_thread(tcp, u.hostname, u.port)
             if ip: node_ips.add(ip)
             if not ok:
                 why = "IP узла недоступен (блокировка по IP)" if info in ("timeout", "TimeoutError") else f"TCP: {info}"
-                results.append({"node": key, "label": label, "ok": False, "why": why}); continue
+                results.append({"node": key, "label": label, "hidden": hidden, "ok": False, "why": why}); continue
             r = await asyncio.to_thread(tunnel, outbound_from_link(link))
-            results.append({"node": key, "label": label, **r})
+            results.append({"node": key, "label": label, "hidden": hidden, **r})
 
     bad_vantage = (not vip) or vip in node_ips
     prev = None
@@ -190,11 +191,17 @@ async def main():
     head = f"🛰 Проверка узлов {started:%d.%m %H:%M} из {vip or '?'} ({vorg})"
     if bad_vantage:
         head += f"\n⚠️ Проверка идёт НЕ из сети с блокировками (интерфейс {IFACE}): результаты не показывают картину в РФ."
-    body = [fmt(r) for r in results]
+    from app.apiux.servers import SUB_ORDER
+    rank = {l: i for i, l in enumerate(SUB_ORDER)}
+    shown = sorted([r for r in results if not r.get("hidden")], key=lambda r: rank.get(r["label"], len(rank)))
+    hidden = [r for r in results if r.get("hidden")]
+    body = ["В подписке (по порядку):", *[fmt(r) for r in shown]]
+    if hidden:
+        body += ["", "Скрыты из подписки (проверяются, вдруг разблокируют):", *[fmt(r) for r in hidden]]
     changes = [f"{'🟢 заработал' if r.get('ok') else '🔴 перестал работать'}: {r['label']}" for r in results
                if not r.get("skip") and r["label"] in prev_ok and prev_ok[r["label"]] != r.get("ok")]
-    ok_n = sum(1 for r in results if r.get("ok")); all_n = sum(1 for r in results if not r.get("skip"))
-    text = "\n".join([head, f"Работает {ok_n} из {all_n}", *(["Изменения со вчера:", *changes] if changes else []), "", *body])
+    ok_n = sum(1 for r in shown if r.get("ok")); all_n = sum(1 for r in shown if not r.get("skip"))
+    text = "\n".join([head, f"В подписке работает {ok_n} из {all_n}", *(["Изменения со вчера:", *changes] if changes else []), "", *body])
 
     rec = {"at": started.isoformat(timespec="seconds"), "vantage": vip, "org": vorg, "bad_vantage": bad_vantage, "results": results}
     with open(hist, "a") as f: f.write(json.dumps(rec, ensure_ascii=False) + "\n")
