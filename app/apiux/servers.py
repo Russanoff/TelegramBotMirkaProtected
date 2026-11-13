@@ -13,7 +13,14 @@ SERVERS = {
         "password": os.getenv('PASSWORD'),
         "remark": "Germany",
         "sub_base": "https://germany.mirkaprotected.ru:4525:2096/subBbSc/",
-        "host": "germany.mirkaprotected.ru"
+        "host": "germany.mirkaprotected.ru",
+        # Пересылки через Германию (вход на GE, выход в USA/NL/PL; tools/relay_setup.py). Блокировки по IP в РФ
+        # «плавают» (12.11 закрыты NL/USA, 13.11 - PL/USA), а GE доступна оба дня: через неё есть путь в каждую страну.
+        "extras": [
+            {"remark": "GE-USA", "label": "🇺🇸USA(GE)", "suffix": "_GU"},
+            {"remark": "GE-NL", "label": "🇳🇱Nederlanden(GE)", "suffix": "_GN"},
+            {"remark": "GE-PL", "label": "🇵🇱Poland(GE)", "suffix": "_GP"},
+        ],
     },
     
     "RU-USA": {
@@ -51,7 +58,6 @@ SERVERS = {
         "remark": "Nederlanden",
         "sub_base": "https://panel.mirkaprotected.ru:2096/sub/",
         "host": "panel.mirkaprotected.ru",
-        "hidden": True,  # IP заблокирован в РФ целиком (12.11.2026): в подписке только через PL ("Nederlanden(PL)")
         # Второй вход на том же узле: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель с настоящим
         # сертификатом. Проходит там, где gRPC + Reality режется (проверено владельцем). Клиент в нём создаётся
         # с тем же subId, что и в основном входе (email с суффиксом), ссылка идёт в подписку отдельной строкой.
@@ -66,7 +72,6 @@ SERVERS = {
         "remark": "USA",
         "sub_base": "https://usa.mirkaprotected.ru:2096/suBscRibe/",
         "host": "usa.mirkaprotected.ru",
-        "hidden": True,  # IP заблокирован в РФ целиком (12.11.2026): в подписке только через PL ("USA(PL)")
         # второй («боевой») вход, как на NL: VLESS TCP + Reality + Vision, SNI - свой домен, dest - панель
         "vision": {"remark": "USA-Vision", "label": "🇺🇸USA2", "suffix": "_V"},
     },
@@ -74,11 +79,14 @@ SERVERS = {
 }
 
 
-# Порядок ссылок в подписке (по названию), сверху самые быстрые и надёжные. Замеры из сети с блокировками РФ
-# (Енакиево, 12.11.2026, tools/daily_probe.py): Германия ~450 мс, 13-37 Мбит/с, хостер, который пропускают и
-# домашние сети РФ; Польша ~600 мс, 20-36; NL через PL ~700-800 мс, 23-36; USA через PL ~800-1500 мс, 17-32;
-# Ru-Usa (rukas -> PL -> USA, двойной каскад) ~650 мс, 9-18. Названия не из списка идут в конце.
-SUB_ORDER = ["🇩🇪Germany", "🇵🇱Poland", "🇳🇱Nederlanden(PL)", "🇺🇸USA(PL)", "🇺🇸Ru-Usa"]
+# Порядок ссылок в подписке (по названию), сверху самые надёжные. Блокировки по IP в РФ меняются день ото дня
+# (замеры tools/daily_probe.py из Енакиево: 12.11 закрыты NL/USA, 13.11 - PL/USA), поэтому в подписке все пути,
+# а сверху - через Германию, доступную в оба дня. Названия не из списка идут в конце.
+SUB_ORDER = [
+    "🇩🇪Germany", "🇺🇸USA(GE)", "🇳🇱Nederlanden(GE)", "🇵🇱Poland(GE)",
+    "🇳🇱Nederlanden", "🇳🇱Nederlanden2", "🇵🇱Poland", "🇳🇱Nederlanden(PL)", "🇺🇸USA(PL)",
+    "🇺🇸Ru-Usa", "🇺🇸USA", "🇺🇸USA2",
+]
 
 
 def subscription_servers() -> dict:

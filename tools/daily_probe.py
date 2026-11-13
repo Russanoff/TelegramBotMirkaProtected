@@ -12,6 +12,8 @@ Xray: tools/bin/xray (в git не попадает; скачать с github.com
 Интерфейс: переменная PROBE_IFACE (по умолчанию en1).
 """
 import asyncio, datetime, json, os, re, socket, subprocess, sys, time, urllib.parse, urllib.request, uuid, warnings
+for _v in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+    os.environ.pop(_v, None)  # curl/urllib без прокси окружения: проверка должна идти напрямую через интерфейс
 
 warnings.filterwarnings("ignore")
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,13 +44,21 @@ def bound_socket():
 
 
 def vantage():
-    """Откуда идёт проверка: IP и провайдер через выбранный интерфейс."""
+    """Откуда идёт проверка: IP и провайдер через выбранный интерфейс (сокет привязан к нему, прокси окружения не участвуют)."""
+    import ssl
     try:
-        ip = subprocess.run(["curl", "-s", "-m", "10", "--interface", IFACE, "https://api.ipify.org"], capture_output=True, text=True).stdout.strip()
-        org = json.loads(urllib.request.urlopen(f"https://ipinfo.io/{ip}/json", timeout=10).read()).get("org", "?")
-        return ip, org
+        s = bound_socket(); s.settimeout(10)
+        s.connect((socket.gethostbyname("api.ipify.org"), 443))
+        c = ssl.create_default_context().wrap_socket(s, server_hostname="api.ipify.org")
+        c.sendall(b"GET / HTTP/1.1\r\nHost: api.ipify.org\r\nConnection: close\r\n\r\n")
+        ip = c.recv(4096).decode().split("\r\n\r\n")[-1].strip(); c.close()
     except Exception as e:
         return "", f"нет сети через {IFACE}: {type(e).__name__}"
+    try:
+        org = json.loads(urllib.request.urlopen(f"https://ipinfo.io/{ip}/json", timeout=10).read()).get("org", "?")
+    except Exception:
+        org = "?"
+    return ip, org
 
 
 def tcp(host, port):
