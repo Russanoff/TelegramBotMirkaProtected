@@ -18,6 +18,12 @@ run() { "${SSH[@]}" "$HOST" "$@"; }
 
 MODE="${1:-deploy}"
 
+if [ "$MODE" = "status" ]; then  # только чтение: какой коммит на сервере и живы ли сервисы
+  run "cd $DIR && echo \"сервер: \$(git log --oneline -1)\" && systemctl is-active nginx bot.service api.service | paste -sd' ' -"
+  echo "origin/main: $(git log --oneline -1 origin/main)"
+  exit 0
+fi
+
 if [ "$MODE" = "deploy" ]; then
   git fetch -q origin main
   if [ "$(git rev-parse main)" != "$(git rev-parse origin/main)" ]; then
