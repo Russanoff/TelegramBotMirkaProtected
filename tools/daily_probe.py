@@ -31,7 +31,7 @@ IFACE = os.environ.get("PROBE_IFACE", "en1")
 OUT_DIR = os.path.join(REPO, "notes", "monitor")
 PREFIX = "MONITOR_"
 IP_BOUND_IF = 25  # macOS
-args = [a for a in sys.argv[1:] if not a.startswith("--")]
+args = [a for a in sys.argv[1:] if not a.startswith("--")]  # флаги: --no-send, --daily
 ONLY = args[0].split(",") if args else list(SERVERS)
 SEND = "--no-send" not in sys.argv
 
@@ -166,6 +166,20 @@ def send(text):
 
 async def main():
     os.makedirs(OUT_DIR, exist_ok=True)
+    if "--daily" in sys.argv:
+        # запуск по расписанию каждый час: один прогон в день, начиная с 10:00 (если Мак спал или был выключен - в первый же час работы)
+        now = datetime.datetime.now()
+        if now.hour < 10:
+            return
+        hist_p = os.path.join(OUT_DIR, "history.jsonl")
+        if os.path.exists(hist_p):
+            for line in open(hist_p):
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if r.get("at", "").startswith(now.strftime("%Y-%m-%d")) and not r.get("bad_vantage") and r.get("full"):
+                    return
     started = datetime.datetime.now()
     vip, vorg = vantage()
     node_ips = set()
@@ -213,7 +227,7 @@ async def main():
     ok_n = sum(1 for r in shown if r.get("ok")); all_n = sum(1 for r in shown if not r.get("skip"))
     text = "\n".join([head, f"В подписке работает {ok_n} из {all_n}", *(["Изменения со вчера:", *changes] if changes else []), "", *body])
 
-    rec = {"at": started.isoformat(timespec="seconds"), "vantage": vip, "org": vorg, "bad_vantage": bad_vantage, "results": results}
+    rec = {"full": ONLY == list(SERVERS) and SEND, "at": started.isoformat(timespec="seconds"), "vantage": vip, "org": vorg, "bad_vantage": bad_vantage, "results": results}
     with open(hist, "a") as f: f.write(json.dumps(rec, ensure_ascii=False) + "\n")
     open(os.path.join(OUT_DIR, "last.txt"), "w").write(text + "\n")
     print(text)
